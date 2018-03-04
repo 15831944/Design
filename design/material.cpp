@@ -12,17 +12,17 @@ void Material::setName(double name)
 	updateInfo();
 }
 
-double Material::getName() const{return name;}
+double Material::getName() const{ return name; }
 
-double Material::get_E() const{return E;}
+double Material::get_E() const{ return E; }
 
-double Material::get_G() const{return G;}
+double Material::get_G() const{ return G; }
 
-double Material::get_¦Í() const{return ¦Í;}
+double Material::get_¦Í() const{ return ¦Í; }
 
-double Material::get_¦Ác() const{return ¦Ác;}
+double Material::get_¦Ác() const{ return ¦Ác; }
 
-double Material::get_¦Ã() const{return ¦Ã;}
+double Material::get_¦Ã() const{ return ¦Ã; }
 
 //*------------------------------------*//
 
@@ -35,27 +35,27 @@ Concrete::Concrete(double name)
 
 Concrete::~Concrete(){}
 
-double Concrete::get_fcuk() const{return fcuk;}
+double Concrete::get_fcuk() const{ return fcuk; }
 
-double Concrete::get_fck() const{return fck;}
+double Concrete::get_fck() const{ return fck; }
 
-double Concrete::get_ftk() const{return ftk;}
+double Concrete::get_ftk() const{ return ftk; }
 
-double Concrete::get_fc() const{return fc;}
+double Concrete::get_fc() const{ return fc; }
 
-double Concrete::get_ft() const{return ft;}
+double Concrete::get_ft() const{ return ft; }
 
-double Concrete::get_fcc() const{return fcc;}
+double Concrete::get_fcc() const{ return fcc; }
 
-double Concrete::get_fct() const{return fct;}
+double Concrete::get_fct() const{ return fct; }
 
-double Concrete::get_¦Å0() const{return ¦Å0;}
+double Concrete::get_¦Å0() const{ return ¦Å0; }
 
-double Concrete::get_¦Åcu() const{return ¦Åcu;}
+double Concrete::get_¦Åcu() const{ return ¦Åcu; }
 
-double Concrete::get_¦Á1() const{return ¦Á1;}
+double Concrete::get_¦Á1() const{ return ¦Á1; }
 
-double Concrete::get_¦Â1() const{return ¦Â1;}
+double Concrete::get_¦Â1() const{ return ¦Â1; }
 
 void Concrete::updateInfo()
 {
@@ -119,7 +119,8 @@ double Concrete::calc_¦Â1() const
 
 //*------------------------------------*//
 
-Rebar::Rebar(double name){
+Rebar::Rebar(double name)
+{
 	setName(name);
 }
 

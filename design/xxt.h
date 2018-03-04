@@ -1,7 +1,20 @@
 #pragma once
 
+#include <map>
+
 const double EPSILON = 1e-6;//double误差值
 
 //stage:0-内插;1-左侧外差;2-右侧外差;3-双侧外差
 double interpolation(double x1, double y1, double x2, double y2, double x, int stage);//差值计算
 double interpolation(double x1, double y1, double x2, double y2, double x);//差值计算
+
+//获取map值，若没有则新建
+template<typename KeyName, class ValueName>
+ValueName* getMapValueClassPt(std::map<KeyName, ValueName*>& classMap, KeyName key)
+{
+	if (classMap.find(key) == classMap.end()){
+		ValueName* pt = new ValueName(key);
+		classMap.insert(classMap.end(), std::pair<KeyName, ValueName*>(key, pt));
+	}
+	return classMap[key];
+}

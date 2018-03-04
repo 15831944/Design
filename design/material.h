@@ -86,7 +86,7 @@ private:
 class Rebar : public Material
 {
 	Rebar(){}
-    explicit Rebar(double name);
+	explicit Rebar(double name);
 	virtual ~Rebar();
 
 	virtual E_MaterialType getType(){return E_MaterialType::E_MT_REINFORCEMENT;}

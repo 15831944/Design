@@ -8,27 +8,28 @@
 #include "beam.h"
 #include "Section.h"
 #include "material.h"
+#include "xxt.h"
 
 //[portotype]
 ///准备数据
-void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcementMap);
+void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap);
 ///获取梁信息
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcementMap);
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap);
 
 
 int main(){
 	std::map<double, Concrete*> concreteMap;//砼材料表
-	std::map<double, Rebar*> reinforcementMap;//钢筋材料表
-	prepareInfo(concreteMap, reinforcementMap);
+	std::map<double, Rebar*> rebarMap;//钢筋材料表
+	prepareInfo(concreteMap, rebarMap);
 	Beam beam;
 	while(true){
-		getInfo(beam, concreteMap, reinforcementMap);
+		getInfo(beam, concreteMap, rebarMap);
 		beam.design();
 	}
 	return 0;
 }
 
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcementMap){
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap){
 	std::cout << "b h c" << std::endl;
 	double b, h, c;//宽、高、保护层厚度
 	std::cin >> b >> h >> c;
@@ -36,12 +37,13 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 	beam.setSection(section, c);
 	
 	std::cout << "砼、纵筋、箍筋、钢骨材料等级" << std::endl;
-	double concrete, rebarL, rebarS, skeleton;//砼、纵筋、箍筋、钢骨材料
-	std::cin >> concrete >> rebarL >> rebarS >> skeleton;
-	if (concreteMap.at(concrete) != NULL){
-		
-	}
-	beam.setMaterial(14.3, 2.01, 360, 360, 360);
+	double concreteName, rebarL, rebarS, skeleton;//砼、纵筋、箍筋、钢骨材料
+	std::cin >> concreteName >> rebarL >> rebarS >> skeleton;
+	Concrete* concretePt = getMapValueClassPt(concreteMap, concreteName);
+	Rebar* rebarLPt = getMapValueClassPt(rebarMap, rebarL);
+	Rebar* rebarSPt = getMapValueClassPt(rebarMap, rebarS);
+	beam.setMaterial(concretePt, rebarLPt, rebarSPt);
+
 	std::cout << "N V2 V3 T M2 M3" << std::endl;
 	double n, v2, v3, t, m2, m3;
 	std::cin >> n >> v2 >> v3 >> t >> m2 >> m3;
