@@ -133,24 +133,24 @@ double Rebar::get_fyv() const{ return fyv; }
 
 void Rebar::updateInfo(){
 	fy = 1;
-	E = name <= 300.001 ? 2.1e5 : 2e5;//[XXT]double总存在一些误差，double不要进行精确的比较，如double存放300实际可能为300.00000001，此时不要与300比，要与300.0001比
+	E = name <= 300 + EPSILON ? 2.1e5 : 2e5;//[XXT]double总存在一些误差，double不要进行精确的比较，如double存放300实际可能为300.00000001，此时不要与300比，要与300.0001比
 	G = 0.4 * E;//[]待确定
 	ν = 0.3;//[]待确定
 	αc = 1.2e-5;//[]待确定
 	γ = 78;
 	fy = calc_fy();
-	fy_c = 
+	fy_c = calc_fy_c();
 	fyv = calc_fyv(); 
 }
 
 double Rebar::calc_fy() const
 {
-	return name < 499 ? name / 1.1 : name / 1.15;
+	return name < 500 - EPSILON ? name / 1.1 : name / 1.15;
 }
 double Rebar::calc_fy_c() const{
-	return name < 499 ? name / 1.1 : name / 1.2;//[]待确定
+	return name < 500 - EPSILON ? name / 1.1 : name / 1.2;//[]待确定
 }
 
 double Rebar::calc_fyv() const{
-	return name > 360.001 ? 360 : name;
+	return name > 360 + EPSILON ? 360 : name;
 }

@@ -11,33 +11,26 @@ double interpolation(double x1, double y1, double x2, double y2, double x, int s
   switch(stage)
   {
   case 0:
-    return interpolation(x1, y1, x2, y2, x);
+    x = x > x2 ? x2 : x;
+    x = x < x1 ? x1 : x;
     break;
   case 1:
-    if(x < x1 - EPSILON) return y1 + (y2 - y1) / (x2 - x1) * (x - x1);
-    return interpolation(x1, y1, x2, y2, x);
+    x = x > x2 ? x2 : x;
     break;
   case 2:
-    if(x > x2 + EPSILON) return y1 + (y2 - y1) / (x2 - x1) * (x - x1);
-    return interpolation(x1, y1, x2, y2, x);
+    x = x < x1 ? x1 : x;
     break;
   case 3:
-    return y1 + (y2 - y1) / (x2 - x1) * (x - x1);
     break;
   default:
     break;
   }
+  return interpolation(x1, y1, x2, y2, x);
 }
 
 double interpolation(double x1, double y1, double x2, double y2, double x)
 {
 	//[]有什么办法能直接中断程序抛出错误？
 	if(abs(x1 - x2) <= EPSILON) return 999;//{ASSERT(0);cerr << "内插值x1、x2不能相等！" << endl;}
-	if(x < x1 + EPSILON){
-		return y1;
-	}else if(x > x1 - EPSILON){
-		return y2;
-	}else{
-		return y1 + (y2 - y1) / (x2 - x1) * (x - x1);
-	}
+	return y1 + (y2 - y1) / (x2 - x1) * (x - x1);
 }
