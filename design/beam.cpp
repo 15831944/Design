@@ -29,18 +29,26 @@ void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS)
 	data.stirrup = rebarS;
 }
 
-void Beam::setCalculateParameter(double gama0, double gamaRE, int Nfb, int Nfb_gz){
-	data.gama0 = gama0;
-	data.gamaRE = gamaRE;
+void Beam::setCalculateParameter(double ¦Ã0, int Nfb, int Nfb_gz)
+{
+	data.¦Ã0 = ¦Ã0;
 	data.Nfb = Nfb;
 	data.Nfb_gz = Nfb_gz;
 }
 
-void Beam::setForce(double n, double f2, double f3, double t, double m2, double m3){
-	
+void Beam::setForce(double N, double V2, double V3, double T, double M2, double M3)
+{
+	//´ý¸Ä
+	m_FundamentalCombination[0].N = N;
+	m_FundamentalCombination[0].V2 = V2;
+	m_FundamentalCombination[0].V3 = V3;
+	m_FundamentalCombination[0].T = T;
+	m_FundamentalCombination[0].M2 = M2;
+	m_FundamentalCombination[0].M3 = M3;
 }
 
-void Beam::design(){
+void Beam::design()
+{
 	DesignBeam designBeam(&data);
 	designBeam.design();
 	
@@ -49,9 +57,7 @@ void Beam::design(){
 	std::cout << "As'=" << m_result[0].As_c << "¦Ñ'=" << m_result[0].rho_c << std::endl;
 }
 
-void Beam::setCheck(){
-	data.rhoMin = 0.002;
-	data.rhoMax = 0.025;
-	data.rhoMin_c = 0.0025;
-	data.rhoMin_sv = 0.002;
+void Beam::setCheck()
+{
+	
 }

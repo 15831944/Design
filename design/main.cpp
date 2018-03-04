@@ -6,7 +6,7 @@
 #include <map>
 
 #include "beam.h"
-#include "Section.h"
+#include "section.h"
 #include "material.h"
 #include "xxt.h"
 
@@ -30,7 +30,13 @@ int main(){
 }
 
 void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap){
-	std::cout << "b h c" << std::endl;
+	std::cout << "安全系数、抗震等级、抗震构造等级" << std::endl;
+	double γ0;
+	int Nfb, Nfb_gz;
+	std::cin >> γ0 >> Nfb >> Nfb_gz;
+	beam.setCalculateParameter(γ0, Nfb, Nfb_gz);
+
+	std::cout << "宽、高、保护层厚度" << std::endl;
 	double b, h, c;//宽、高、保护层厚度
 	std::cin >> b >> h >> c;
 	Section* section = new RectSection(b, h);
@@ -59,10 +65,18 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 */
 }
 
-void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcement){
+void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap){
+	//初始化砼材料
 	for(int i = 15; i <= 80; i +=5){
 		double curName = i;
 		Concrete* curConcrete = new Concrete(curName);
 		concreteMap.insert(concreteMap.end(), std::pair<double, Concrete*>(curName, curConcrete));
+	}
+	//初始化钢筋材料
+	double rebar[4] = {300, 335, 400, 500};
+	for each(double it in rebar){
+		double curName = it;
+		Rebar* curRebar = new Rebar(curName);
+		rebarMap.insert(rebarMap.end(), std::pair<double, Rebar*>(curName, curRebar));
 	}
 }

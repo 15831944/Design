@@ -13,8 +13,8 @@ template<typename KeyName, class ValueName>
 ValueName* getMapValueClassPt(std::map<KeyName, ValueName*>& classMap, KeyName key)
 {
 	if (classMap.find(key) == classMap.end()){
-		ValueName* pt = new ValueName(key);
-		classMap.insert(classMap.end(), std::pair<KeyName, ValueName*>(key, pt));
+		ValueName* classPt = new ValueName(key);
+		classMap.insert(classMap.end(), std::pair<KeyName, ValueName*>(key, classPt));
 	}
 	return classMap[key];
 }

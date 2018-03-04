@@ -3,17 +3,20 @@
 #include "beam.h"
 
 //力单位转换统一到N
-enum ForceUnit{
-	k_N=1,
-	k_kN=1000
+enum E_ForceUnit
+{
+	E_FU_N = 1,
+	E_FU_kN = 1000
 };
 //长度单位转换统一到mm
-enum LengthUnit{
-	k_mm=1,//mm
-	k_m=1000//m
+enum E_LengthUnit
+{
+	E_LU_mm = 1,//mm
+	E_LU_m = 1000//m
 };
 
-class Design{
+class Design
+{
 public:
 	Design();
 	virtual ~Design();
@@ -26,15 +29,25 @@ protected:
 
 //*------------------------------------*//
 
-class DesignBeam : public Design{
+class DesignBeam : public Design
+{
 public:
-	DesignBeam(Beam::Data* data);
+	explicit DesignBeam(Beam::Data* data);
 	virtual ~DesignBeam();
 	virtual void setData(void* data);//塞入数据
 	virtual void design();//进行设计additionData
 private:
-	struct AdditionData{//附加数据
-		double ksiB;
+	struct AdditionData
+	{//附加数据
+		//计算参数
+		double ξb;//砼极限受压区高度
+		double γRE_M;//正截面γRE
+		double γRE_V;//斜截面γRE
+		//验算参数
+		double rhoMin;//ρmin
+		double rhoMin_c;//ρmin
+		double rhoMax;//ρmax
+		double rhoMin_sv;//ρsv,min
 	} additionData;
 	Beam::Data* data;
 

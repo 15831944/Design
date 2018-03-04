@@ -4,7 +4,7 @@
 */
 #include "concrete_design.h"
 #include <cmath>
-#include "design.h";
+#include "design.h"
 
 using namespace std;
 
@@ -32,7 +32,7 @@ void designM(double M
 	double as_c = c + AS_SINGLE;//as'
 	double h0 = h - as;
 	As_c = rhoMin_c * b * h;
-	double Md = M - fy_c * As_c * (h0 - as_c) / ForceUnit::k_kN / LengthUnit::k_m;
+	double Md = M - fy_c * As_c * (h0 - as_c) / E_ForceUnit::E_FU_kN / E_LengthUnit::E_LU_m;
 	calculateAs(Md ,b ,h, as, as_c, fc, fy, fy_c, alpha1, ksiB, rhoMin_c, x, As, As_c);
 	rho = As / b / h0;//ρ
 	rho_c = As_c / b / h0;//ρ'
@@ -40,7 +40,7 @@ void designM(double M
 	if(rho >= RHO_LIMIT) as = c + AS_DUAL;
 	if(rho_c >= RHO_LIMIT) as_c = c + AS_DUAL;
 //	As_c = rhoMin_c * b * h;
-//	Md = M - fy_c * As_c * (h0 - as_c) / ForceUnit::k_kN / LengthUnit::k_m;
+//	Md = M - fy_c * As_c * (h0 - as_c) / E_ForceUnit::E_FU_kN / E_LengthUnit::E_LU_m;
 	calculateAs(Md ,b ,h, as, as_c, fc, fy, fy_c, alpha1, ksiB, rhoMin_c, x, As, As_c);
 	rho_c = As_c / b / h0;//ρ'
 	if(rho_c < RHO_LIMIT){
@@ -48,23 +48,23 @@ void designM(double M
 	}else{
 		as_c = c + AS_DUAL;
 //		As_c = rhoMin_c * b * h;
-//		Md = M - fy_c * As_c * (h0 - as_c) / ForceUnit::k_kN / LengthUnit::k_m;
+//		Md = M - fy_c * As_c * (h0 - as_c) / E_ForceUnit::E_FU_kN / E_LengthUnit::E_LU_m;
 		calculateAs(Md ,b ,h, as, as_c, fc, fy, fy_c, alpha1, ksiB, rhoMin_c, x, As, As_c);
 	}
 }
 
 static void calculateAs(double M, double b, double h, double as, double as_c, double fc, double fy, double fy_c, double alpha1, double ksiB, double rhoMin_c, double& x, double& As, double& As_c){
 	double h0 = h - as;
-	double sqrtM = h0 * h0 - 2 * M * ForceUnit::k_kN * LengthUnit::k_m / (alpha1 * fc * b);//根号里面的内容
+	double sqrtM = h0 * h0 - 2 * M * E_ForceUnit::E_FU_kN * E_LengthUnit::E_LU_m / (alpha1 * fc * b);//根号里面的内容
 	double sqrtLimit = h0 * h0 * (1 - ksiB) * (1 - ksiB);
 	if(sqrtM < sqrtLimit){//此时x>xb，按双筋计算，As'要比ρmin大
 		x = ksiB * h0;
-		As_c = (M * ForceUnit::k_kN * LengthUnit::k_m - alpha1 * fc * b * x * (h0 - x / 2)) / fy_c / (h0 - as_c);
+		As_c = (M * E_ForceUnit::E_FU_kN * E_LengthUnit::E_LU_m - alpha1 * fc * b * x * (h0 - x / 2)) / fy_c / (h0 - as_c);
 /*		double As_cMin = rhoMin_c * b * h;
 		if(As_c < As_cMin){
 			As_c = As_cMin;
-			double Md = M - fy_c * As_c * (h0 - as_c) / ForceUnit::k_kN / LengthUnit::k_m;
-			sqrtM = h0 * h0 - 2 * Md * ForceUnit::k_kN * LengthUnit::k_m / (alpha1 * fc * b);
+			double Md = M - fy_c * As_c * (h0 - as_c) / E_ForceUnit::E_FU_kN / E_LengthUnit::E_LU_m;
+			sqrtM = h0 * h0 - 2 * Md * E_ForceUnit::E_FU_kN * E_LengthUnit::E_LU_m / (alpha1 * fc * b);
 		}*/
 	}else{//此时x<xb，按单筋计算，As'取ρmin
 		x = h0 - sqrt(sqrtM);

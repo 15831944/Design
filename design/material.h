@@ -85,6 +85,7 @@ private:
 
 class Rebar : public Material
 {
+public:
 	Rebar(){}
 	explicit Rebar(double name);
 	virtual ~Rebar();
