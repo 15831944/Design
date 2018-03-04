@@ -9,40 +9,42 @@
 #include "Section.h"
 #include "material.h"
 
-struct Beam;
-
-using namespace std;
-
 //[portotype]
 ///准备数据
-void prepareInfo(map<double, Concrete*>& concreteMap, map<double, Rebar*>& reinforcementMap);
+void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcementMap);
 ///获取梁信息
-void getInfo(Beam& beam);
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcementMap);
 
 
 int main(){
-//	int 啊 = 1;
-	map<double, Concrete*> concreteMap;//砼材料表
-	map<double, Rebar*> reinforcementMap;//钢筋材料表
+	std::map<double, Concrete*> concreteMap;//砼材料表
+	std::map<double, Rebar*> reinforcementMap;//钢筋材料表
 	prepareInfo(concreteMap, reinforcementMap);
 	Beam beam;
 	while(true){
-		getInfo(beam);
+		getInfo(beam, concreteMap, reinforcementMap);
 		beam.design();
 	}
 	return 0;
 }
 
-void getInfo(Beam& beam){
-	cout << "b h c" << endl;
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcementMap){
+	std::cout << "b h c" << std::endl;
 	double b, h, c;//宽、高、保护层厚度
-	cin >> b >> h >> c;
+	std::cin >> b >> h >> c;
 	Section* section = new RectSection(b, h);
 	beam.setSection(section, c);
+	
+	std::cout << "砼、纵筋、箍筋、钢骨材料等级" << std::endl;
+	double concrete, rebarL, rebarS, skeleton;//砼、纵筋、箍筋、钢骨材料
+	std::cin >> concrete >> rebarL >> rebarS >> skeleton;
+	if (concreteMap.at(concrete) != NULL){
+		
+	}
 	beam.setMaterial(14.3, 2.01, 360, 360, 360);
-	cout << "N V2 V3 T M2 M3" << endl;
+	std::cout << "N V2 V3 T M2 M3" << std::endl;
 	double n, v2, v3, t, m2, m3;
-	cin >> n >> v2 >> v3 >> t >> m2 >> m3;
+	std::cin >> n >> v2 >> v3 >> t >> m2 >> m3;
 	beam.setForce(n, v2, v3, t, m2, m3);
 /*	stringstream ss;
 	ss << "300 700 14.3 360 360";
@@ -55,10 +57,10 @@ void getInfo(Beam& beam){
 */
 }
 
-void prepareInfo(map<double, Concrete*>& concreteMap, map<double, Rebar*>& reinforcement){
+void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& reinforcement){
 	for(int i = 15; i <= 80; i +=5){
 		double curName = i;
 		Concrete* curConcrete = new Concrete(curName);
-		concreteMap.insert(concreteMap.end(), pair<double, Concrete*>(curName, curConcrete));
+		concreteMap.insert(concreteMap.end(), std::pair<double, Concrete*>(curName, curConcrete));
 	}
 }
