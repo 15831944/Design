@@ -126,9 +126,9 @@ public:
 private:
 	double fy;
 
-	double calc_f() const;
-	double calc_fv() const;
-	double calc_fce() const;
+	double calc_f(double t) const;
+	double calc_fv(double t) const;
+	double calc_fce(double t) const;
 
 	int getThicknessStage(double t) const;
 };

@@ -159,6 +159,7 @@ double Rebar::calc_fyv() const
 }
 
 //*------------------------------------*//
+
 Steel::Steel(double name)
 {
 	setName(name);
@@ -166,11 +167,13 @@ Steel::Steel(double name)
 
 Steel::~Steel(){}
 
-double Steel::get_f(double t) const{ return calc_f(double t); }
+double Steel::get_fy() const{ return fy; }
 
-double Steel::get_fv(double t) const{ return calc_fv(double t); }
+double Steel::get_f(double t) const{ return calc_f(t); }
 
-double Steel::get_fce(double t) const{ return calc_fce(double t); }
+double Steel::get_fv(double t) const{ return calc_fv(t); }
+
+double Steel::get_fce(double t) const{ return calc_fce(t); }
 
 void Steel::updateInfo()
 {
@@ -185,14 +188,14 @@ void Steel::updateInfo()
 double Steel::calc_f(double t) const
 {
 	if (abs(fy - 235) <= EPSILON){
-
+		return 0;
 	}
 	switch (getThicknessStage(t))
 	{
 	case 0:
 		return 215;
 	case 1:
-		return 205
+		return 205;
 	case 2:
 		return 200;
 	case 3:
@@ -201,7 +204,7 @@ double Steel::calc_f(double t) const
 }
 double Steel::calc_fv(double t) const
 {
-
+	return 0;
 }
 
 double Steel::calc_fce(double t) const
@@ -210,7 +213,7 @@ double Steel::calc_fce(double t) const
 	if (abs(name - 345) <= EPSILON) return 400;
 	if (abs(name - 390) <= EPSILON) return 415;
 	if (abs(name - 420) <= EPSILON) return 440;
-	std::cerr << "未知材料" << std::endl;
+	//std::cerr << "未知材料" << std::endl;
 	return -999;//给个错值
 }
 

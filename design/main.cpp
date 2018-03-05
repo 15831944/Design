@@ -1,4 +1,4 @@
-#include "sqlite3.h"
+//#include "sqlite3.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -20,7 +20,7 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 
 
 int main(){
-  test();
+//	test();
 	std::map<double, Concrete*> concreteMap;//砼材料表
 	std::map<double, Rebar*> rebarMap;//钢筋材料表
 	prepareInfo(concreteMap, rebarMap);
@@ -83,11 +83,11 @@ void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Reba
 		rebarMap.insert(rebarMap.end(), std::pair<double, Rebar*>(curName, curRebar));
 	}
 }
-
+/*
 void test()
 {
   sqlite3* ptDataBase;//数据库指针
   char* path = ".\\test.db";
   int stage = sqlite3_open(path, &ptDataBase);
   sqlite3_close(ptDataBase);
-}
+}*/
