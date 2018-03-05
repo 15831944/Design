@@ -1,6 +1,5 @@
 #pragma once
 
-#include <string>
 //[XXT]最好用等宽字体Consolas显示，方便对位
 //[XXT]显示出行号，方便别人定位
 //[XXT]一般不用命名空间，需要时直接加范围符

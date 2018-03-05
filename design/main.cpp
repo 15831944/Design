@@ -86,8 +86,8 @@ void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Reba
 
 void test()
 {
-  sqlite3* db;//数据库指针
+  sqlite3* ptDataBase;//数据库指针
   char* path = ".\\test.db";
-  int stage = sqlite3_open(path, &db);
-  sqlite3_close(db);
+  int stage = sqlite3_open(path, &ptDataBase);
+  sqlite3_close(ptDataBase);
 }

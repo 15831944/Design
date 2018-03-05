@@ -159,8 +159,78 @@ double Rebar::calc_fyv() const
 }
 
 //*------------------------------------*//
-
 Steel::Steel(double name)
 {
 	setName(name);
+}
+
+Steel::~Steel(){}
+
+double Steel::get_f(double t) const{ return calc_f(double t); }
+
+double Steel::get_fv(double t) const{ return calc_fv(double t); }
+
+double Steel::get_fce(double t) const{ return calc_fce(double t); }
+
+void Steel::updateInfo()
+{
+	fy = name;
+	E = 206e3;
+	G = 79e3;
+	ν = 0.28;//[]待确定
+	αc = 1.2e-5;
+	γ = 78.5;
+}
+
+double Steel::calc_f(double t) const
+{
+	if (abs(fy - 235) <= EPSILON){
+
+	}
+	switch (getThicknessStage(t))
+	{
+	case 0:
+		return 215;
+	case 1:
+		return 205
+	case 2:
+		return 200;
+	case 3:
+		return 190;
+	}
+}
+double Steel::calc_fv(double t) const
+{
+
+}
+
+double Steel::calc_fce(double t) const
+{
+	if (abs(name - 235) <= EPSILON) return 325;
+	if (abs(name - 345) <= EPSILON) return 400;
+	if (abs(name - 390) <= EPSILON) return 415;
+	if (abs(name - 420) <= EPSILON) return 440;
+	std::cerr << "未知材料" << std::endl;
+	return -999;//给个错值
+}
+
+int Steel::getThicknessStage(double t)
+{
+	if (abs(fy - 235) <= EPSILON)
+	{
+		if (t < 16 + EPSILON) return 0;
+		if (t < 40 + EPSILON) return 1;
+		if (t < 60 + EPSILON) return 2;
+		if (t < 100 + EPSILON) return 3;
+		return -1;
+	}
+	if (abs(fy - 345) <= EPSILON || abs(fy - 390) <= EPSILON || abs(fy - 420) <= EPSILON)
+	{
+		if (t < 16 + EPSILON) return 0;
+		if (t < 35 + EPSILON) return 1;
+		if (t < 50 + EPSILON) return 2;
+		if (t < 100 + EPSILON) return 3;
+		return -1;//未知厚度
+	}
+	return -2;//未知材料
 }
