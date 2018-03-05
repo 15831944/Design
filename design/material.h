@@ -11,6 +11,7 @@ enum E_MaterialType//[XXT]枚举类型名称最好加E_的标识
 	E_MT_CONCRETE,//砼
 	E_MT_REINFORCEMENT,//普通钢筋
 	E_MT_TENSION,//预应力钢束
+	E_MT_STEEL//钢材
 };
 
 class Material
@@ -82,6 +83,7 @@ private:
 	double calc_β1() const;
 };
 
+//*------------------------------------*//
 
 class Rebar : public Material
 {
@@ -104,4 +106,30 @@ private:
 	double calc_fy() const;
 	double calc_fy_c() const;
 	double calc_fyv() const;
+};
+
+//*------------------------------------*//
+
+class Steel : public Material
+{
+public:
+	Steel(){}
+	explicit Steel(double name);
+	virtual ~Steel();
+
+	virtual E_MaterialType getType(){ return E_MaterialType::E_MT_STEEL; }
+	virtual void updateInfo();
+	double get_fy() const;
+	double get_f(double t) const;
+	double get_fv(double t) const;
+	double get_fce(double t) const;
+
+private:
+	double fy;
+
+	double calc_f() const;
+	double calc_fv() const;
+	double calc_fce() const;
+
+	int getThicknessStage(double t) const;
 };
