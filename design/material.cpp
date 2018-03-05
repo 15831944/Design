@@ -187,20 +187,63 @@ void Steel::updateInfo()
 
 double Steel::calc_f(double t) const
 {
+	//Q235
 	if (abs(fy - 235) <= EPSILON){
-		return 0;
+		switch (getThicknessStage(t))
+		{
+		case 0:
+			return 215;
+		case 1:
+			return 205;
+		case 2:
+			return 200;
+		case 3:
+			return 190;
+		}
 	}
-	switch (getThicknessStage(t))
-	{
-	case 0:
-		return 215;
-	case 1:
-		return 205;
-	case 2:
-		return 200;
-	case 3:
-		return 190;
+	//Q345
+	if (abs(fy - 345) <= EPSILON){
+		switch (getThicknessStage(t))
+		{
+		case 0:
+			return 310;
+		case 1:
+			return 295;
+		case 2:
+			return 265;
+		case 3:
+			return 250;
+		}
 	}
+	//Q390
+	if (abs(fy - 390) <= EPSILON){
+		switch (getThicknessStage(t))
+		{
+		case 0:
+			return 350;
+		case 1:
+			return 335;
+		case 2:
+			return 315;
+		case 3:
+			return 295;
+		}
+	}
+	//Q420
+	if (abs(fy - 420) <= EPSILON){
+		switch (getThicknessStage(t))
+		{
+		case 0:
+			return 380;
+		case 1:
+			return 360;
+		case 2:
+			return 340;
+		case 3:
+			return 325;
+		}
+	}
+	std::cerr << "未知材料" << std::endl;
 }
 double Steel::calc_fv(double t) const
 {
@@ -213,11 +256,11 @@ double Steel::calc_fce(double t) const
 	if (abs(name - 345) <= EPSILON) return 400;
 	if (abs(name - 390) <= EPSILON) return 415;
 	if (abs(name - 420) <= EPSILON) return 440;
-	//std::cerr << "未知材料" << std::endl;
+	std::cerr << "未知材料" << std::endl;
 	return -999;//给个错值
 }
 
-int Steel::getThicknessStage(double t)
+int Steel::getThicknessStage(double t) const
 {
 	if (abs(fy - 235) <= EPSILON)
 	{
