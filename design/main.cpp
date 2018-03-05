@@ -1,3 +1,4 @@
+#include "sqlite3.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -11,6 +12,7 @@
 #include "xxt.h"
 
 //[portotype]
+void test();
 ///准备数据
 void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap);
 ///获取梁信息
@@ -18,6 +20,7 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 
 
 int main(){
+  test();
 	std::map<double, Concrete*> concreteMap;//砼材料表
 	std::map<double, Rebar*> rebarMap;//钢筋材料表
 	prepareInfo(concreteMap, rebarMap);
@@ -79,4 +82,12 @@ void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Reba
 		Rebar* curRebar = new Rebar(curName);
 		rebarMap.insert(rebarMap.end(), std::pair<double, Rebar*>(curName, curRebar));
 	}
+}
+
+void test()
+{
+  sqlite3* db;//数据库指针
+  char* path = ".\\test.db";
+  int stage = sqlite3_open(path, &db);
+  sqlite3_close(db);
 }

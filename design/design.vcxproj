@@ -60,11 +60,14 @@
       <PrecompiledHeader />
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\lib\includes</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -96,12 +99,16 @@
     <ClCompile Include="xxt.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\lib\includes\sqlite3.h" />
     <ClInclude Include="beam.h" />
     <ClInclude Include="concrete_design.h" />
     <ClInclude Include="design.h" />
     <ClInclude Include="material.h" />
     <ClInclude Include="section.h" />
     <ClInclude Include="xxt.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\lib\sqlite3.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
