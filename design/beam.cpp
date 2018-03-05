@@ -8,7 +8,7 @@ data.x(0), As(0), As_c(0), rho(0)
 ,rho_c(0), Asv(0), rho_sv(0)*/
 { 
 	setSection(NULL, 20);
-	setMaterial(NULL, NULL, NULL);
+	setMaterial(NULL, NULL, NULL, NULL);
 	m_FundamentalCombination.resize(6);//[]´ý¸Ä
 	m_result.resize(9);
 	setCheck();
@@ -22,11 +22,12 @@ void Beam::setSection(Section* section, double c)
 	data.c = c;
 }
 
-void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS)
+void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS, Steel* steel)
 {
 	data.concrete = concrete;
 	data.longitudinal = rebarL;
 	data.stirrup = rebarS;
+	data.skeleton = steel;
 }
 
 void Beam::setCalculateParameter(double ¦Ã0, int Nfb, int Nfb_gz)

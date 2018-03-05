@@ -16,23 +16,24 @@ void test();
 ///准备数据
 void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap);
 ///获取梁信息
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap);
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap);
 
 
 int main(){
 //	test();
 	std::map<double, Concrete*> concreteMap;//砼材料表
 	std::map<double, Rebar*> rebarMap;//钢筋材料表
+	std::map<double, Steel*> steelMap;//钢材表
 	prepareInfo(concreteMap, rebarMap);
 	Beam beam;
 	while(true){
-		getInfo(beam, concreteMap, rebarMap);
+		getInfo(beam, concreteMap, rebarMap, steelMap);
 		beam.design();
 	}
 	return 0;
 }
 
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap){
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap){
 	std::cout << "安全系数、抗震等级、抗震构造等级" << std::endl;
 	double γ0;
 	int Nfb, Nfb_gz;
@@ -51,7 +52,8 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 	Concrete* concretePt = getMapValueClassPt(concreteMap, concreteName);
 	Rebar* rebarLPt = getMapValueClassPt(rebarMap, rebarL);
 	Rebar* rebarSPt = getMapValueClassPt(rebarMap, rebarS);
-	beam.setMaterial(concretePt, rebarLPt, rebarSPt);
+	Steel* steelPt = getMapValueClassPt(steelMap, skeleton);
+	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
 
 	std::cout << "N V2 V3 T M2 M3" << std::endl;
 	double n, v2, v3, t, m2, m3;
