@@ -44,14 +44,17 @@ private:
 		double γRE_M;//正截面γRE
 		double γRE_V;//斜截面γRE
 		//验算参数
-		double rhoMin;//ρmin
-		double rhoMin_c;//ρmin
+		double rhoMin_LR;//支座ρmin
+		double rhoMin_c_LR;//支座ρ'min
+		double rhoMin_M;//跨中ρmin
+		double rhoMin_c_M;//跨中ρ'min
 		double rhoMax;//ρmax
 		double rhoMin_sv;//ρsv,min
 	} additionData;
 	Beam::Data* data;
-
+//[]这些函数怎么能写成virtual？
 	void prepare();//准备数据
+	void setRebarRatio();//设置配筋率限值
 	void designM();//设计纵筋
 	void designV();//设计箍筋
 };

@@ -1,3 +1,5 @@
+#include <iostream>
+#include <cmath>
 #include "design.h"
 #include "concrete_design.h"//砼构件计算公式
 
@@ -7,7 +9,7 @@ const double RHO_LIMIT = 0.01;//控制是否按双排配筋计算的配筋率界限，ρ<RHO_LIMIT
 
 //[portotype]
 ///计算ξb
-double get_ξb(double β1, double fy, double Es, double εcu);
+double get_ξb(double β1, double fy, double Es, double εcu, int Nfb_gz);
 ///计算配筋
 static void calculateAs(double M, double b, double h, double as, double as_c, double fc, double fy, double fy_c, double alpha1, double kxiB, double rhoMin_c, double& x, double& As, double& As_c);
 ///计算x
@@ -41,14 +43,11 @@ void DesignBeam::design()
 
 void DesignBeam::prepare()
 {
-	additionData.ξb = get_ξb(data->concrete->get_β1(), data->longitudinal->get_fy(), data->longitudinal->get_E(), data->concrete->get_εcu());
+	additionData.ξb = get_ξb(data->concrete->get_β1(), data->longitudinal->get_fy(), data->longitudinal->get_E(), data->concrete->get_εcu(), data->Nfb_gz);
 	additionData.γRE_M = 0.75;
 	additionData.γRE_V = 0.85;
-	//[]待改，与梁抗震等级有关
-	additionData.rhoMin = 0.002;
-	additionData.rhoMax = 0.025;
-	additionData.rhoMin_c = 0.0025;
-	additionData.rhoMin_sv = 0.002;
+	//生成与梁抗震构造等级有关的配筋率限值
+	setRebarRatio();
 }
 
 void DesignBeam::designM()
@@ -109,7 +108,127 @@ void DesignBeam::designV()
 	
 }
 
-double get_ξb(double β1, double fy, double Es, double εcu)
+double get_ξb(double β1, double fy, double Es, double εcu, int Nfb_gz)
 {
-	return β1 / (1 + fy / (Es * εcu));
+	double result = β1 / (1 + fy / (Es * εcu));
+	switch (Nfb_gz)
+	{
+	case 0:
+	case 1:
+		return fmin(result, 0.25);
+	case 2:
+	case 3:
+		return fmin(result, 0.35);
+	default:
+		return result;
+	}
+}
+
+void DesignBeam::setRebarRatio()
+{
+	double ft_Divide_fy = data->concrete->get_ft() / data->longitudinal->get_fy();
+	double ft_Divide_fyv = data->concrete->get_ft() / data->stirrup->get_fyv();
+	switch (data->beamType)
+	{
+	//转换梁
+	case E_BeamType::E_BT_TRANSFER_BEAM:
+		switch (data->Nfb_gz)
+		{
+		case 0:
+			additionData.rhoMin_LR
+				= additionData.rhoMin_c_LR
+				= additionData.rhoMin_M
+				= additionData.rhoMin_c_M
+				= 0.006;
+			additionData.rhoMax = 0.025;
+			additionData.rhoMin_sv = 1.3 * ft_Divide_fyv;
+		case 1:
+			additionData.rhoMin_LR
+				= additionData.rhoMin_c_LR
+				= additionData.rhoMin_M
+				= additionData.rhoMin_c_M
+				= 0.005;
+			additionData.rhoMax = 0.025;
+			additionData.rhoMin_sv = 1.2 * ft_Divide_fyv;
+		case 2:
+			additionData.rhoMin_LR
+				= additionData.rhoMin_c_LR
+				= additionData.rhoMin_M
+				= additionData.rhoMin_c_M
+				= 0.004;
+			additionData.rhoMax = 0.025;
+			additionData.rhoMin_sv = 1.1 * ft_Divide_fyv;
+		case 3:
+		case 4:
+			std::cerr << "转换梁抗震构造等级至少为二级！" << std::endl;
+			break;
+		case 5:
+			additionData.rhoMin_LR
+				= additionData.rhoMin_c_LR
+				= additionData.rhoMin_M
+				= additionData.rhoMin_c_M
+				= 0.003;
+			additionData.rhoMax = 0.0275;
+			additionData.rhoMin_sv = 0.9 * ft_Divide_fyv;
+		default:
+			std::cerr << "未知抗震构造等级！" << std::endl;
+			break;
+		}
+	//其他梁
+	case E_BeamType::E_BT_BEAM:
+		if (data->Nfb != 5 || data->Nfb_gz != 5) std::cerr << "非框架梁包含抗震等级！" << std::endl;
+	default:
+		switch (data->Nfb_gz)
+		{
+		case 0:
+			additionData.rhoMin_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
+			additionData.rhoMin_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			additionData.rhoMin_c_LR
+				= additionData.rhoMin_c_M
+				= fmin(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.rhoMax = 0.025;
+			additionData.rhoMin_sv = 0.33 * ft_Divide_fyv;
+			break;
+		case 1:
+			additionData.rhoMin_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
+			additionData.rhoMin_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			additionData.rhoMin_c_LR
+				= additionData.rhoMin_c_M
+				= fmin(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.rhoMax = 0.025;
+			additionData.rhoMin_sv = 0.3 * ft_Divide_fyv;
+			break;
+		case 2:
+			additionData.rhoMin_LR = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			additionData.rhoMin_M = fmin(0.25, 55 * ft_Divide_fy) / 100;
+			additionData.rhoMin_c_LR
+				= additionData.rhoMin_c_M
+				= fmin(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.rhoMax = 0.025;
+			additionData.rhoMin_sv = 0.28 * ft_Divide_fyv;
+			break;
+		case 3:
+		case 4:
+			additionData.rhoMin_LR = fmin(0.25, 55 * ft_Divide_fy) / 100;
+			additionData.rhoMin_M = fmin(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.rhoMin_c_LR
+				= additionData.rhoMin_c_M
+				= fmin(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.rhoMax = 0.025;
+			additionData.rhoMin_sv = 0.26 * ft_Divide_fyv;
+			break;
+		case 5:
+			additionData.rhoMin_LR 
+				= additionData.rhoMin_c_LR 
+				= additionData.rhoMin_M 
+				= additionData.rhoMin_c_M
+				= fmin(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.rhoMax = 0.0275;
+			additionData.rhoMin_sv = 0.24 * ft_Divide_fyv;
+			break;
+		default:
+			std::cerr << "未知抗震构造等级！" << std::endl;
+			break;
+		}
+	}
 }

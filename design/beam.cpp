@@ -3,12 +3,12 @@
 #include "beam.h"
 #include "design.h"
 
-Beam::Beam()/*:
-data.x(0), As(0), As_c(0), rho(0)
-,rho_c(0), Asv(0), rho_sv(0)*/
+Beam::Beam()
 { 
 	setSection(NULL, 20);
 	setMaterial(NULL, NULL, NULL, NULL);
+	setCalculateParameter(0, 5, 5);
+	setBeamType(E_BeamType::E_BT_BEAM);
 	m_FundamentalCombination.resize(6);//[]´ý¸Ä
 	m_result.resize(9);
 	setCheck();
@@ -35,6 +35,11 @@ void Beam::setCalculateParameter(double ¦Ã0, int Nfb, int Nfb_gz)
 	data.¦Ã0 = ¦Ã0;
 	data.Nfb = Nfb;
 	data.Nfb_gz = Nfb_gz;
+}
+
+void Beam::setBeamType(E_BeamType beamType)
+{
+	data.beamType = beamType;
 }
 
 void Beam::setForce(double N, double V2, double V3, double T, double M2, double M3)

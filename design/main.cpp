@@ -1,4 +1,4 @@
-//#include "sqlite3.h"
+#include "sqlite3.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -14,7 +14,7 @@
 //[portotype]
 void test();
 ///准备数据
-void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap);
+void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap);
 ///获取梁信息
 void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap);
 
@@ -24,7 +24,8 @@ int main(){
 	std::map<double, Concrete*> concreteMap;//砼材料表
 	std::map<double, Rebar*> rebarMap;//钢筋材料表
 	std::map<double, Steel*> steelMap;//钢材表
-	prepareInfo(concreteMap, rebarMap);
+
+	prepareInfo(concreteMap, rebarMap, steelMap);
 	Beam beam;
 	while(true){
 		getInfo(beam, concreteMap, rebarMap, steelMap);
@@ -39,6 +40,11 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 	int Nfb, Nfb_gz;
 	std::cin >> γ0 >> Nfb >> Nfb_gz;
 	beam.setCalculateParameter(γ0, Nfb, Nfb_gz);
+
+	std::cout << "梁类型：0-框架梁；1-非框架梁；2-连梁；3-转换梁" << std::endl;
+	int beamType;
+	std::cin >> beamType;
+	beam.setBeamType((E_BeamType)beamType);//[]这里非得写个强转，否则编不过？
 
 	std::cout << "宽、高、保护层厚度" << std::endl;
 	double b, h, c;//宽、高、保护层厚度
@@ -70,26 +76,36 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 */
 }
 
-void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap){
+void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap){
 	//初始化砼材料
-	for(int i = 15; i <= 80; i +=5){
+	for(int i = 15; i <= 80; i +=5)
+	{
 		double curName = i;
 		Concrete* curConcrete = new Concrete(curName);
 		concreteMap.insert(concreteMap.end(), std::pair<double, Concrete*>(curName, curConcrete));
 	}
 	//初始化钢筋材料
 	double rebar[4] = {300, 335, 400, 500};
-	for each(double it in rebar){
+	for each(double it in rebar)
+	{
 		double curName = it;
 		Rebar* curRebar = new Rebar(curName);
 		rebarMap.insert(rebarMap.end(), std::pair<double, Rebar*>(curName, curRebar));
 	}
+	//初始化钢材
+	double steel[4] = {235, 345, 390, 420};
+	for each(double it in steel)
+	{
+		double curName = it;
+		Steel* curSteel = new Steel(curName);
+		steelMap.insert(steelMap.end(), std::pair<double, Steel*>(curName, curSteel));
+	}
 }
-/*
+
 void test()
 {
   sqlite3* ptDataBase;//数据库指针
   char* path = ".\\test.db";
   int stage = sqlite3_open(path, &ptDataBase);
   sqlite3_close(ptDataBase);
-}*/
+}

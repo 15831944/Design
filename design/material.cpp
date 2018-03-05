@@ -81,19 +81,19 @@ void Concrete::updateInfo()
 double Concrete::calc_αc1() const
 {
 	//C50及以下0.76，C80取0.82，中间内插
-	return interpolation(50, 0.76, 80, 0.82, fcuk);
+	return interpolation(50, 0.76, 80, 0.82, fcuk, 0);
 }
 
 double Concrete::calc_αc2() const
 {
 	//C40及以下1.00，C80取0.87，中间内插
-	return interpolation(40, 1.00, 80, 0.87, fcuk);
+	return interpolation(40, 1.00, 80, 0.87, fcuk, 0);
 }
 
 double Concrete::calc_δ() const
 {
 	//C40及以下0.12，C80取0.08，中间内插//[]δ取值对于C25及以下的结果与规范对不上
-	return interpolation(40, 0.12, 80, 0.08, fcuk);
+	return interpolation(40, 0.12, 80, 0.08, fcuk, 0);
 }
 
 double Concrete::calc_ε0() const
@@ -110,12 +110,12 @@ double Concrete::calc_εcu() const
 
 double Concrete::calc_α1() const
 {
-	return interpolation(50, 1.0, 80, 0.94, fcuk);
+	return interpolation(50, 1.0, 80, 0.94, fcuk, 0);
 }
 
 double Concrete::calc_β1() const
 {
-	return interpolation(50, 0.8, 80, 0.74, fcuk);
+	return interpolation(50, 0.8, 80, 0.74, fcuk, 0);
 }
 
 //*------------------------------------*//
