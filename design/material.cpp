@@ -1,5 +1,6 @@
 #include "material.h"
 #include <cmath>
+#include <iostream>
 #include "xxt.h"
 
 Material::Material(){}
