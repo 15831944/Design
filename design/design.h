@@ -63,7 +63,7 @@ private:
 	Beam::Data* data;
 //[]这些函数怎么能写成virtual？
 	void prepare();//准备数据
-	void setRebarRatio();//设置配筋率限值
+	void setRebarRatio();//生成与梁抗震构造等级、梁类型有关的配筋率限值
 	void designM();//设计纵筋
 	void designV();//设计箍筋
 };
