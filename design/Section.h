@@ -1,5 +1,5 @@
 #pragma once
-
+//Ωÿ√Ê¿‡
 enum E_Section
 {
 	E_S_SECTION,

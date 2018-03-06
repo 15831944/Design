@@ -1,10 +1,26 @@
 #pragma once
-
+//存放各类通用声明、方法
 #include <set>
 #include <map>
 
+//[enum]
+///力单位转换统一到N
+enum E_ForceUnit
+{
+	E_FU_N = 1,
+	E_FU_kN = 1000
+};
+///长度单位转换统一到mm
+enum E_LengthUnit
+{
+	E_LU_mm = 1,//mm
+	E_LU_m = 1000//m
+};
+
+//[const]
 const double EPSILON = 1e-6;//double误差值
 
+//[struct]
 struct Force
 {//内力
 	double N;

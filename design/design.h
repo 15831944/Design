@@ -1,20 +1,7 @@
 #pragma once
-
+//设计类，读取构件类进行设计
 #include "xxt.h"
 #include "beam.h"
-
-//力单位转换统一到N
-enum E_ForceUnit
-{
-	E_FU_N = 1,
-	E_FU_kN = 1000
-};
-//长度单位转换统一到mm
-enum E_LengthUnit
-{
-	E_LU_mm = 1,//mm
-	E_LU_m = 1000//m
-};
 
 class Design
 {
@@ -72,9 +59,9 @@ private:
 	void setParameterE();//生成地震组合设计相关参数
 	void designULS();//承载能力极限状态设计
 	void designSLS();//正常使用极限状态设计
-	void designSection(Force* force);//单一截面设计
-	void designM();//设计纵筋
-	void designV();//设计箍筋
+	void designSection(const Force& force, Beam::Result& result);//单一截面设计
+	void designM(const Force& force, Beam::Result& result);//设计纵筋
+	void designV(const Force& force, Beam::Result& result);//设计箍筋
 
 	double calc_ρmin_AD();//计算ρmin_AD
 	double calc_ρmax_AD();//计算ρmax_AD

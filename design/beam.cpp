@@ -8,8 +8,6 @@ Beam::Beam()
 	setMaterial(NULL, NULL, NULL, NULL);
 	setCalculateParameter(0, 5, 5);
 	setBeamType(E_BeamType::E_BT_BEAM);
-	m_FundamentalCombination.resize(6);//[]待改
-	m_result.resize(9);
 	setCheck();
 }
 
@@ -43,23 +41,23 @@ void Beam::setBeamType(E_BeamType beamType)
 
 void Beam::setForce(double N, double V2, double V3, double T, double M2, double M3)
 {
-	//待改
-	m_FundamentalCombination[0].N = N;
-	m_FundamentalCombination[0].V2 = V2;
-	m_FundamentalCombination[0].V3 = V3;
-	m_FundamentalCombination[0].T = T;
-	m_FundamentalCombination[0].M2 = M2;
-	m_FundamentalCombination[0].M3 = M3;
+	Force force = { N, V2, V3, T, M2, M3 };
+	m_FundamentalCombination.push_back(force);
 }
 
 void Beam::showResult()
 {
-	std::cout << "正截面" << std::endl;
-	std::cout << "x=" << m_result[0].x << std::endl;
-	std::cout << "As=" << m_result[0].As << "  ρ=" << m_result[0].ρ << std::endl;
-	std::cout << "As'=" << m_result[0].As_c << "  ρ'=" << m_result[0].ρc << std::endl;
-	std::cout << "斜截面" << std::endl;
-	std::cout << "Asv=" << m_result[0].Asv << "  ρsv=" << m_result[0].ρsv << std::endl;
+	for (int i = 0; i < m_result.size(); i++)
+	{
+		std::cout << "第" << i << "号组合结果:" << std::endl;
+		std::cout << "正截面" << std::endl;
+		std::cout << "x=" << m_result[i].x << std::endl;
+		std::cout << "As=" << m_result[i].As << "  ρ=" << m_result[i].ρ << std::endl;
+		std::cout << "As'=" << m_result[i].As_c << "  ρ'=" << m_result[i].ρc << std::endl;
+		std::cout << "斜截面" << std::endl;
+		std::cout << "Asv=" << m_result[i].Asv << "  ρsv=" << m_result[i].ρsv << std::endl;
+		std::cout << std::endl;
+	}
 }
 
 void Beam::setCheck()

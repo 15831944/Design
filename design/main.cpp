@@ -30,8 +30,8 @@ int main(){
 	std::map<double, Steel*> steelMap;//钢材表
 
 	prepareInfo(concreteMap, rebarMap, steelMap);
-	Beam beam;
 	while(true){
+		Beam beam;
 		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet);
 		DesignBeam designBeam;
 		designBeam.setData(&beam);
@@ -53,7 +53,8 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 	Rebar* rebarSPt = getMapValueClassPt(rebarMap, 400.0);
 	Steel* steelPt = getMapValueClassPt(steelMap, 235.0);
 	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
-	beam.setForce(200, 300, 400, 100, 1200, 1500);
+	beam.setForce(200, 300, 400, 100, 1200, 368);
+	beam.setForce(200, 300, 400, 100, 1200, 314);
 	return;
 	/*-----以上为临时测试内容-----*/
 

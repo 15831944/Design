@@ -36,6 +36,9 @@
     <ClCompile Include="xxt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="force_effect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="beam.h">
@@ -58,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="..\lib\includes\sqlite3.h">
       <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="force_effect.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

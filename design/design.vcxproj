@@ -93,6 +93,7 @@
     <ClCompile Include="beam.cpp" />
     <ClCompile Include="concrete_design.cpp" />
     <ClCompile Include="design.cpp" />
+    <ClCompile Include="force_effect.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="material.cpp" />
     <ClCompile Include="section.cpp" />
@@ -103,6 +104,7 @@
     <ClInclude Include="beam.h" />
     <ClInclude Include="concrete_design.h" />
     <ClInclude Include="design.h" />
+    <ClInclude Include="force_effect.h" />
     <ClInclude Include="material.h" />
     <ClInclude Include="section.h" />
     <ClInclude Include="xxt.h" />

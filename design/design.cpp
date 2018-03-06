@@ -9,10 +9,6 @@ const double AS_DUAL = 47.5;//双筋保护层额外厚度as=c+AS_DUAL按10箍筋25纵筋考虑
 const double ρ_LIMIT = 0.01;//控制是否按双排配筋计算的配筋率界限，ρ<ρ_LIMIT单排，ρ≥ρ_LIMIT双排
 
 //[portotype]
-///计算配筋
-static void calculateAs(double M, double b, double h, double as, double as_c, double fc, double fy, double fy_c, double alpha1, double kxiB, double ρmin_c, double& x, double& As, double& As_c);
-///计算x
-static void calculateX(double M, double b, double h0, double fc, double fy, double alpha1, double& x, double& As_c);
 
 
 Design::Design(){}
@@ -38,102 +34,67 @@ void DesignBeam::setData(void* data)
 void DesignBeam::design()
 {
 	prepare();
-	designM();
-	designV();
+	designULS();//承载能力极限状态验算
+	designSLS();//正常使用极限状态验算
 }
 
 void DesignBeam::prepare()
 {
-	void setParameter();
-	void setParameterAD();
-	void setParameterE();
+	setParameter();
+	setParameterAD();
+	setParameterE();
+	beam->m_result.resize(beam->m_FundamentalCombination.size());
 }
 
 void DesignBeam::designULS()
-{//承载能力极限状态验算
-	for (std::vector<Force>::iterator it = beam->m_FundamentalCombination.begin(); it != beam->m_FundamentalCombination.end(); it++)
+{
+	for(int i = 0; i < beam->m_FundamentalCombination.size(); i++)
 	{
-		designSection(it);
+		designSection(beam->m_FundamentalCombination[i], beam->m_result[i]);
 	}
 }
 
 void DesignBeam::designSLS()
-{//正常使用极限状态验算
-	
+{
+	//[]待添加
 }
 
-void DesignBeam::designSection(Force* force)
+void DesignBeam::designSection(const Force& force, Beam::Result& result)
 {
-	
+	designM(force, result);
+	designV(force, result);
 }
 
-void DesignBeam::designM()
+void DesignBeam::designM(const Force& force, Beam::Result& result)
 {
-	bool isSingleRowAs = true;//标识受拉钢筋是否按单排钢筋计算
-	bool isSingleRowAs_c = true;//标识受压钢筋是否按单排钢筋计算
-	/*
-	while(true){
-		double as = data->c + (isSingleRowAs? AS_SINGLE : AS_DUAL);//as
-		double as_c = data->c + (isSingleRowAs_c? AS_SINGLE : AS_DUAL);//as'
-
-		double h0;
-		switch (data->section->getType())
+	double γRE = 1;//[]待改，根据组合类型确定
+	double ξb = additionData.ξb;//[]待改，根据组合类型确定
+	double ρmin = additionData.ρmin;//[]待改，根据组合类型确定
+	switch (beam->data.section->getType())
+	{
+	case E_Section::E_S_RECT_SECTION:
+		{//[]非要加{}才不报错吗？初始化操作由“case”标签跳过
+		RectSection* section = (RectSection*)data->section;
+		designM_Rect(//矩形截面配筋设计
+			force.M3,
+			section->get_b(), section->get_h(), data->c,
+			data->concrete->get_fc(), data->longitudinal->get_fy(), data->longitudinal->get_fy_c(),
+			γRE, data->γ0, data->concrete->get_α1(), ξb,
+			result.x, result.As, result.As_c, result.ρ, result.ρc);
+			break;
+		}
+	case E_Section::E_S_CIRCLE_SECTION:
 		{
-		case E_Section::E_S_RECT_SECTION:
-			RectSection* section = (RectSection*)data->section;
-			double b = section->get_b();
-			double h = section->get_h();
-			h0 = h - as;
-			double M = beam->m_FundamentalCombination[0].M3;
-			calculateAs(M, b, h, as, as_c, data->concrete->get_fc(), data->longitudinal->get_fy(), data->longitudinal->get_fy_c(), data->concrete->get_α1(), additionData.ξb, beam->m_result[0].x, beam->m_result[0].As, beam->m_result[0].As_c);
-			
-			break;
-		case E_Section::E_S_CIRCLE_SECTION:
-
-			break;
-		default:
-			break;
+		CircleSection* section = (CircleSection*)data->section;
+		break;
 		}
-		ρ = As / b / h0;//ρ
-		ρ_c = As_c / b / h0;//ρ'
-		//判断是否需要重新计算
-		bool needCal = false;//标识是否重新计算
-		//判断受拉钢筋是否要重算
-		needCal = ((ρ < ρ_LIMIT) != isSingleRowAs) || needCal;
-		if(needCal) isSingleRowAs = !isSingleRowAs;
-		//判断受压钢筋是否要重算
-		needCal = ((ρ_c < ρ_LIMIT) != isSingleRowAs_c) || needCal;
-		if(needCal) isSingleRowAs_c = !isSingleRowAs_c;
-		if(!needCal) break;
-	}*/
-}
-
-static void calculateAs(double Md, double as, double as_c)
-{
-	/*double h0 = h - as;
-	double sqrtM = h0 * h0 - 2 * M * ForceUnit::k_kN * LengthUnit::k_m / (alpha1 * fc * b);//根号里面的内容
-	double sqrtLimit = h0 * h0 * (1 - kxiB) * (1 - kxiB);
-	if(sqrtM < sqrtLimit){//此时x>xb，按双筋计算，As'要比ρmin大
-		x = kxiB * h0;
-		As_c = (M * ForceUnit::k_kN * LengthUnit::k_m - alpha1 * fc * b * x * (h0 - x / 2)) / fy_c / (h0 - as_c);
-
-		double As_cMin = ρmin_c * b * h;
-		if(As_c < As_cMin){
-			As_c = As_cMin;
-			double Md = M - fy_c * As_c * (h0 - as_c) / ForceUnit::k_kN / LengthUnit::k_m;
-			sqrtM = h0 * h0 - 2 * Md * ForceUnit::k_kN * LengthUnit::k_m / (alpha1 * fc * b);
-		}
-
-	}else{//此时x<xb，按单筋计算，As'取ρmin
-		x = h0 - sqrt(sqrtM);
+	default:
+		std::cerr << "未知截面！" << std::endl;
+		break;
 	}
-	As = (alpha1 * fc * b * x + fy_c * As_c) / fy;
-	if(x < 2 * as_c){
-		As = M / fy / (h - as - as_c);
-	}*/
 }
 
-void DesignBeam::designV()
+void DesignBeam::designV(const Force& force, Beam::Result& result)
 {
 	
 }
@@ -211,6 +172,7 @@ void DesignBeam::setParameterE()
 			additionData.ρmax_E = 0.025;
 			additionData.minAs_cRatio_LR = 0.5;
 			additionData.minAsRatioContinue = 0.25;
+			break;
 		case 1:
 			additionData.ξb_E = fmin(0.25, additionData.ξb);
 			additionData.ρmin_E_LR
@@ -220,6 +182,7 @@ void DesignBeam::setParameterE()
 			additionData.ρmin_sv_E = 1.2 * ft_Divide_fyv;
 			additionData.minAs_cRatio_LR = 0.5;
 			additionData.minAsRatioContinue = 0.25;
+			break;
 		case 2:
 			additionData.ξb_E = fmin(0.35, additionData.ξb);
 			additionData.ρmin_E_LR
@@ -229,6 +192,7 @@ void DesignBeam::setParameterE()
 			additionData.ρmin_sv_E = 1.1 * ft_Divide_fyv;
 			additionData.minAs_cRatio_LR = 0.3;
 			additionData.minAsRatioContinue = 0.25;
+			break;
 		case 3:
 		case 4:
 			std::cerr << "转换梁抗震构造等级至少为二级！" << std::endl;
@@ -241,6 +205,7 @@ void DesignBeam::setParameterE()
 			additionData.ρmin_sv_E = additionData.ρmin_sv;
 			additionData.minAs_cRatio_LR = 0;
 			additionData.minAsRatioContinue = 0;
+			break;
 		default:
 			std::cerr << "未知抗震构造等级！" << std::endl;
 			break;
