@@ -1,5 +1,6 @@
 #pragma once
 
+#include "xxt.h"
 #include "beam.h"
 
 //力单位转换统一到N
@@ -32,7 +33,8 @@ protected:
 class DesignBeam : public Design
 {
 public:
-	explicit DesignBeam(Beam::Data* data);
+	DesignBeam(){}
+	explicit DesignBeam(Beam* beam);
 	virtual ~DesignBeam();
 	virtual void setData(void* data);//塞入数据
 	virtual void design();//进行设计additionData
@@ -61,12 +63,16 @@ private:
 		double minAs_cRatio_LR;//梁端下铁与上铁的最小比值
 		double minAsRatioContinue;//贯通钢筋与最大配筋的比值
 	} additionData;
+	Beam* beam;
 	Beam::Data* data;
 //[]这些函数怎么能写成virtual？
 	void prepare();//准备数据
 	void setParameter();//生成非地震组合设计相关参数
 	void setParameterAD();//生成人防组合设计相关参数
 	void setParameterE();//生成地震组合设计相关参数
+	void designULS();//承载能力极限状态设计
+	void designSLS();//正常使用极限状态设计
+	void designSection(Force* force);//单一截面设计
 	void designM();//设计纵筋
 	void designV();//设计箍筋
 

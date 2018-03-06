@@ -4,8 +4,11 @@
 #include <fstream>
 #include <string>
 
+#include <vector>
 #include <map>
+#include <set>
 
+#include "design.h"
 #include "beam.h"
 #include "section.h"
 #include "material.h"
@@ -16,11 +19,12 @@ void test();
 ///准备数据
 void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap);
 ///获取梁信息
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap);
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap, std::set<Section*>& sectionSet);
 
 
 int main(){
 //	test();
+	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	std::map<double, Concrete*> concreteMap;//砼材料表
 	std::map<double, Rebar*> rebarMap;//钢筋材料表
 	std::map<double, Steel*> steelMap;//钢材表
@@ -28,13 +32,32 @@ int main(){
 	prepareInfo(concreteMap, rebarMap, steelMap);
 	Beam beam;
 	while(true){
-		getInfo(beam, concreteMap, rebarMap, steelMap);
-		beam.design();
+		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet);
+		DesignBeam designBeam;
+		designBeam.setData(&beam);
+		designBeam.design();
+		beam.showResult();
+
+		system("pause");
 	}
 	return 0;
 }
 
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap){
+void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap, std::set<Section*>& sectionSet){
+	beam.setCalculateParameter(1.0, 5, 5);
+	beam.setBeamType((E_BeamType)0);
+	Section* section = new RectSection(300, 700);
+	beam.setSection(section, 20);
+	Concrete* concretePt = getMapValueClassPt(concreteMap, 30.0);
+	Rebar* rebarLPt = getMapValueClassPt(rebarMap, 400.0);
+	Rebar* rebarSPt = getMapValueClassPt(rebarMap, 400.0);
+	Steel* steelPt = getMapValueClassPt(steelMap, 235.0);
+	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
+	beam.setForce(200, 300, 400, 100, 1200, 1500);
+	return;
+	/*-----以上为临时测试内容-----*/
+
+	/*
 	std::cout << "安全系数、抗震等级、抗震构造等级" << std::endl;
 	double γ0;
 	int Nfb, Nfb_gz;
@@ -65,15 +88,7 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 	double n, v2, v3, t, m2, m3;
 	std::cin >> n >> v2 >> v3 >> t >> m2 >> m3;
 	beam.setForce(n, v2, v3, t, m2, m3);
-/*	stringstream ss;
-	ss << "300 700 14.3 360 360";
-	cout << "b h fc fy fyv" << endl;
-//	ss >> beam.b >> beam.h >> beam.fc >> beam.fy >> beam.fyv;
-	cout << "f1 f2 f3 m1 m2 m3" << endl;
-	ss.clear();
-	ss << "100 600 800 200 600 1200";
-//	ss >> beam.f1 >> beam.f2 >> beam.f3 >> beam.m1 >> beam.m2 >> beam.m3;
-*/
+	*/
 }
 
 void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap){

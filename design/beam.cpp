@@ -1,7 +1,6 @@
 #include <iostream>
 
 #include "beam.h"
-#include "design.h"
 
 Beam::Beam()
 { 
@@ -53,14 +52,14 @@ void Beam::setForce(double N, double V2, double V3, double T, double M2, double 
 	m_FundamentalCombination[0].M3 = M3;
 }
 
-void Beam::design()
+void Beam::showResult()
 {
-	DesignBeam designBeam(&data);
-	designBeam.design();
-	
+	std::cout << "淏諍醱" << std::endl;
 	std::cout << "x=" << m_result[0].x << std::endl;
-	std::cout << "As=" << m_result[0].As << "老=" << m_result[0].rho << std::endl;
-	std::cout << "As'=" << m_result[0].As_c << "老'=" << m_result[0].rho_c << std::endl;
+	std::cout << "As=" << m_result[0].As << "  老=" << m_result[0].老 << std::endl;
+	std::cout << "As'=" << m_result[0].As_c << "  老'=" << m_result[0].老c << std::endl;
+	std::cout << "訇諍醱" << std::endl;
+	std::cout << "Asv=" << m_result[0].Asv << "  老sv=" << m_result[0].老sv << std::endl;
 }
 
 void Beam::setCheck()

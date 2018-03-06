@@ -12,7 +12,7 @@ void designM(double M
 			 , double fc, double fy, double fy_c
 			 , double gamaRE, double gama0, double alpha1, double ksiB
 			 , double rhoMin
-			 , double& x, double& As, double& As_c, double& rho, double& rho_c);
+			 , double& x, double& As, double& As_c, double& rho, double& ¶—c);
 
 ///¥øºÙº∆À„(V||b£¨h0||ft£¨fyv||¶¡cv£¨s||asv)
 void designV(double v, double b, double h0, double ft, double fyv, double alphaCV, double s, double& asv);

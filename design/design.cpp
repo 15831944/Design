@@ -21,16 +21,18 @@ Design::~Design(){}
 
 //*------------------------------------*//
 
-DesignBeam::DesignBeam(Beam::Data* data)
+DesignBeam::DesignBeam(Beam* beam)
 {
-	this->data = data;
+	this->beam = beam;
+	this->data = &(beam->data);
 }
 
 DesignBeam::~DesignBeam(){}
 
 void DesignBeam::setData(void* data)
 {
-	this->data = (Beam::Data*) data;
+	this->beam = (Beam*)data;
+	this->data = &(this->beam->data);
 }
 
 void DesignBeam::design()
@@ -47,20 +49,51 @@ void DesignBeam::prepare()
 	void setParameterE();
 }
 
+void DesignBeam::designULS()
+{//承载能力极限状态验算
+	for (std::vector<Force>::iterator it = beam->m_FundamentalCombination.begin(); it != beam->m_FundamentalCombination.end(); it++)
+	{
+		designSection(it);
+	}
+}
+
+void DesignBeam::designSLS()
+{//正常使用极限状态验算
+	
+}
+
+void DesignBeam::designSection(Force* force)
+{
+	
+}
+
 void DesignBeam::designM()
 {
-	/*
 	bool isSingleRowAs = true;//标识受拉钢筋是否按单排钢筋计算
 	bool isSingleRowAs_c = true;//标识受压钢筋是否按单排钢筋计算
-
-
-
+	/*
 	while(true){
 		double as = data->c + (isSingleRowAs? AS_SINGLE : AS_DUAL);//as
 		double as_c = data->c + (isSingleRowAs_c? AS_SINGLE : AS_DUAL);//as'
-		calculateAs(M ,b ,h, as, as_c, fc, fy, fy_c, alpha1, kxiB, x, As, As_c);
-		double h0 = data->section - as;
 
+		double h0;
+		switch (data->section->getType())
+		{
+		case E_Section::E_S_RECT_SECTION:
+			RectSection* section = (RectSection*)data->section;
+			double b = section->get_b();
+			double h = section->get_h();
+			h0 = h - as;
+			double M = beam->m_FundamentalCombination[0].M3;
+			calculateAs(M, b, h, as, as_c, data->concrete->get_fc(), data->longitudinal->get_fy(), data->longitudinal->get_fy_c(), data->concrete->get_α1(), additionData.ξb, beam->m_result[0].x, beam->m_result[0].As, beam->m_result[0].As_c);
+			
+			break;
+		case E_Section::E_S_CIRCLE_SECTION:
+
+			break;
+		default:
+			break;
+		}
 		ρ = As / b / h0;//ρ
 		ρ_c = As_c / b / h0;//ρ'
 		//判断是否需要重新计算
@@ -113,7 +146,7 @@ void DesignBeam::setParameter()
 	additionData.ρmin = fmax(0.2, 45 * ft_Divide_fy) / 100; 
 	additionData.ρmax = 0.0275;
 	additionData.ρmin_sv = 0.24 * ft_Divide_fyv;
-	if(data->beamType == E_BeamType::E_BT_TRANSFER_BEAM)
+	if (data->beamType == E_BeamType::E_BT_TRANSFER_BEAM)
 	{
 		additionData.ρmin = 0.003;
 		additionData.ρmin_sv = 0.9 * ft_Divide_fyv;

@@ -27,23 +27,23 @@ void designM(double M
 			 , double fc, double fy, double fy_c
 			 , double gamaRE, double gama0, double alpha1, double ksiB
 			 , double rhoMin_c
-			 , double& x, double& As, double& As_c, double& rho, double& rho_c){
+			 , double& x, double& As, double& As_c, double& ρ, double& ρc){
 	double as = c + AS_SINGLE;//as
 	double as_c = c + AS_SINGLE;//as'
 	double h0 = h - as;
 	As_c = rhoMin_c * b * h;
 	double Md = M - fy_c * As_c * (h0 - as_c) / E_ForceUnit::E_FU_kN / E_LengthUnit::E_LU_m;
 	calculateAs(Md ,b ,h, as, as_c, fc, fy, fy_c, alpha1, ksiB, rhoMin_c, x, As, As_c);
-	rho = As / b / h0;//ρ
-	rho_c = As_c / b / h0;//ρ'
-	if(rho < RHO_LIMIT && rho_c < RHO_LIMIT) return;
-	if(rho >= RHO_LIMIT) as = c + AS_DUAL;
-	if(rho_c >= RHO_LIMIT) as_c = c + AS_DUAL;
+	ρ = As / b / h0;//ρ
+	ρc = As_c / b / h0;//ρ'
+	if(ρ < RHO_LIMIT && ρc < RHO_LIMIT) return;
+	if(ρ >= RHO_LIMIT) as = c + AS_DUAL;
+	if(ρc >= RHO_LIMIT) as_c = c + AS_DUAL;
 //	As_c = rhoMin_c * b * h;
 //	Md = M - fy_c * As_c * (h0 - as_c) / E_ForceUnit::E_FU_kN / E_LengthUnit::E_LU_m;
 	calculateAs(Md ,b ,h, as, as_c, fc, fy, fy_c, alpha1, ksiB, rhoMin_c, x, As, As_c);
-	rho_c = As_c / b / h0;//ρ'
-	if(rho_c < RHO_LIMIT){
+	ρc = As_c / b / h0;//ρ'
+	if(ρc < RHO_LIMIT){
 		return;
 	}else{
 		as_c = c + AS_DUAL;
@@ -112,7 +112,7 @@ void beam_CalculateTransverseRebar(double v, double b, double h0, double ft, dou
 
 
 /*
-void designM(double M, double b, double h, double c, double fc, double fy, double fy_c, double alpha1, double ksiB, double rhoMin_c, double& x, double& As, double& As_c, double& rho, double& rho_c){
+void designM(double M, double b, double h, double c, double fc, double fy, double fy_c, double alpha1, double ksiB, double rhoMin_c, double& x, double& As, double& As_c, double& rho, double& ρc){
 	bool isSingleRowAs = true;//标识受拉钢筋是否按单排钢筋计算
 	bool isSingleRowAs_c = true;//标识受压钢筋是否按单排钢筋计算
 	while(true){
@@ -120,15 +120,15 @@ void designM(double M, double b, double h, double c, double fc, double fy, doubl
 		double as_c = c + (isSingleRowAs_c? AS_SINGLE : AS_DUAL);//as'
 		calculateAs(M ,b ,h, as, as_c, fc, fy, fy_c, alpha1, ksiB, x, As, As_c);
 		double h0 = h - as;
-		rho = As / b / h0;//ρ
-		rho_c = As_c / b / h0;//ρ'
+		ρ = As / b / h0;//ρ
+		ρc = As_c / b / h0;//ρ'
 		//判断是否需要重新计算
 		bool needCal = false;//标识是否重新计算
 		//判断受拉钢筋是否要重算
-		needCal = ((rho < RHO_LIMIT) != isSingleRowAs) || needCal;
+		needCal = ((ρ < RHO_LIMIT) != isSingleRowAs) || needCal;
 		if(needCal) isSingleRowAs = !isSingleRowAs;
 		//判断受压钢筋是否要重算
-		needCal = ((rho_c < RHO_LIMIT) != isSingleRowAs_c) || needCal;
+		needCal = ((ρc < RHO_LIMIT) != isSingleRowAs_c) || needCal;
 		if(needCal) isSingleRowAs_c = !isSingleRowAs_c;
 		if(!needCal) break;
 	}
