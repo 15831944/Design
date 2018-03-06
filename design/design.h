@@ -39,17 +39,26 @@ public:
 private:
 	struct AdditionData
 	{//附加数据
-		//计算参数
-		double ξb;//砼极限受压区高度
+		//非地震组合设计
+		double ξb;//砼受压区限值
+		double ρmin;//最小配筋率
+		double ρmax;//最大配筋率
+		double ρmin_sv;//最小配箍率
+		//人防组合设计
+		double ξb_RF;
+		double ρmin_RF;
+		double ρmax_RF;
+		double ρmin_sv_RF;
+		//地震组合设计
+		double ξb_E;
 		double γRE_M;//正截面γRE
 		double γRE_V;//斜截面γRE
-		//验算参数
-		double rhoMin_LR;//支座ρmin
-		double rhoMin_c_LR;//支座ρ'min
-		double rhoMin_M;//跨中ρmin
-		double rhoMin_c_M;//跨中ρ'min
-		double rhoMax;//ρmax
-		double rhoMin_sv;//ρsv,min
+		double ρmin_E_LR;//支座ρmin
+		double ρmin_E_M;//跨中ρmin
+		double ρmax_E;
+		double ρmin_sv_E;
+		double minAs_cRatio_LR;//梁端下铁与上铁的最小比值
+		double minAsRatioContinue;//贯通钢筋与最大配筋的比值
 	} additionData;
 	Beam::Data* data;
 //[]这些函数怎么能写成virtual？

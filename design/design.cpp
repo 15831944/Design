@@ -5,13 +5,13 @@
 
 const double AS_SINGLE = 22.5;//单筋保护层额外厚度as=c+AS_SINGLE按10箍筋25纵筋考虑
 const double AS_DUAL = 47.5;//双筋保护层额外厚度as=c+AS_DUAL按10箍筋25纵筋考虑
-const double RHO_LIMIT = 0.01;//控制是否按双排配筋计算的配筋率界限，ρ<RHO_LIMIT单排，ρ≥RHO_LIMIT双排
+const double ρ_LIMIT = 0.01;//控制是否按双排配筋计算的配筋率界限，ρ<ρ_LIMIT单排，ρ≥ρ_LIMIT双排
 
 //[portotype]
 ///计算ξb
 double get_ξb(double β1, double fy, double Es, double εcu, int Nfb_gz);
 ///计算配筋
-static void calculateAs(double M, double b, double h, double as, double as_c, double fc, double fy, double fy_c, double alpha1, double kxiB, double rhoMin_c, double& x, double& As, double& As_c);
+static void calculateAs(double M, double b, double h, double as, double as_c, double fc, double fy, double fy_c, double alpha1, double kxiB, double ρMin_c, double& x, double& As, double& As_c);
 ///计算x
 static void calculateX(double M, double b, double h0, double fc, double fy, double alpha1, double& x, double& As_c);
 
@@ -64,15 +64,15 @@ void DesignBeam::designM()
 		calculateAs(M ,b ,h, as, as_c, fc, fy, fy_c, alpha1, kxiB, x, As, As_c);
 		double h0 = data->section - as;
 
-		rho = As / b / h0;//ρ
-		rho_c = As_c / b / h0;//ρ'
+		ρ = As / b / h0;//ρ
+		ρ_c = As_c / b / h0;//ρ'
 		//判断是否需要重新计算
 		bool needCal = false;//标识是否重新计算
 		//判断受拉钢筋是否要重算
-		needCal = ((rho < RHO_LIMIT) != isSingleRowAs) || needCal;
+		needCal = ((ρ < ρ_LIMIT) != isSingleRowAs) || needCal;
 		if(needCal) isSingleRowAs = !isSingleRowAs;
 		//判断受压钢筋是否要重算
-		needCal = ((rho_c < RHO_LIMIT) != isSingleRowAs_c) || needCal;
+		needCal = ((ρ_c < ρ_LIMIT) != isSingleRowAs_c) || needCal;
 		if(needCal) isSingleRowAs_c = !isSingleRowAs_c;
 		if(!needCal) break;
 	}*/
@@ -87,7 +87,7 @@ static void calculateAs(double Md, double as, double as_c)
 		x = kxiB * h0;
 		As_c = (M * ForceUnit::k_kN * LengthUnit::k_m - alpha1 * fc * b * x * (h0 - x / 2)) / fy_c / (h0 - as_c);
 
-		double As_cMin = rhoMin_c * b * h;
+		double As_cMin = ρMin_c * b * h;
 		if(As_c < As_cMin){
 			As_c = As_cMin;
 			double Md = M - fy_c * As_c * (h0 - as_c) / ForceUnit::k_kN / LengthUnit::k_m;
@@ -135,41 +135,41 @@ void DesignBeam::setRebarRatio()
 		switch (data->Nfb_gz)
 		{
 		case 0:
-			additionData.rhoMin_LR
-				= additionData.rhoMin_c_LR
-				= additionData.rhoMin_M
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR
+				= additionData.ρMin_c_LR
+				= additionData.ρMin_M
+				= additionData.ρMin_c_M
 				= 0.006;
-			additionData.rhoMax = 0.025;
-			additionData.rhoMin_sv = 1.3 * ft_Divide_fyv;
+			additionData.ρMax = 0.025;
+			additionData.ρMin_sv = 1.3 * ft_Divide_fyv;
 		case 1:
-			additionData.rhoMin_LR
-				= additionData.rhoMin_c_LR
-				= additionData.rhoMin_M
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR
+				= additionData.ρMin_c_LR
+				= additionData.ρMin_M
+				= additionData.ρMin_c_M
 				= 0.005;
-			additionData.rhoMax = 0.025;
-			additionData.rhoMin_sv = 1.2 * ft_Divide_fyv;
+			additionData.ρMax = 0.025;
+			additionData.ρMin_sv = 1.2 * ft_Divide_fyv;
 		case 2:
-			additionData.rhoMin_LR
-				= additionData.rhoMin_c_LR
-				= additionData.rhoMin_M
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR
+				= additionData.ρMin_c_LR
+				= additionData.ρMin_M
+				= additionData.ρMin_c_M
 				= 0.004;
-			additionData.rhoMax = 0.025;
-			additionData.rhoMin_sv = 1.1 * ft_Divide_fyv;
+			additionData.ρMax = 0.025;
+			additionData.ρMin_sv = 1.1 * ft_Divide_fyv;
 		case 3:
 		case 4:
 			std::cerr << "转换梁抗震构造等级至少为二级！" << std::endl;
 			break;
 		case 5:
-			additionData.rhoMin_LR
-				= additionData.rhoMin_c_LR
-				= additionData.rhoMin_M
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR
+				= additionData.ρMin_c_LR
+				= additionData.ρMin_M
+				= additionData.ρMin_c_M
 				= 0.003;
-			additionData.rhoMax = 0.0275;
-			additionData.rhoMin_sv = 0.9 * ft_Divide_fyv;
+			additionData.ρMax = 0.0275;
+			additionData.ρMin_sv = 0.9 * ft_Divide_fyv;
 		default:
 			std::cerr << "未知抗震构造等级！" << std::endl;
 			break;
@@ -181,50 +181,50 @@ void DesignBeam::setRebarRatio()
 		switch (data->Nfb_gz)
 		{
 		case 0:
-			additionData.rhoMin_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
-			additionData.rhoMin_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
-			additionData.rhoMin_c_LR
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
+			additionData.ρMin_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			additionData.ρMin_c_LR
+				= additionData.ρMin_c_M
 				= fmin(0.2, 45 * ft_Divide_fy) / 100;
-			additionData.rhoMax = 0.025;
-			additionData.rhoMin_sv = 0.33 * ft_Divide_fyv;
+			additionData.ρMax = 0.025;
+			additionData.ρMin_sv = 0.33 * ft_Divide_fyv;
 			break;
 		case 1:
-			additionData.rhoMin_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
-			additionData.rhoMin_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
-			additionData.rhoMin_c_LR
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
+			additionData.ρMin_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			additionData.ρMin_c_LR
+				= additionData.ρMin_c_M
 				= fmin(0.2, 45 * ft_Divide_fy) / 100;
-			additionData.rhoMax = 0.025;
-			additionData.rhoMin_sv = 0.3 * ft_Divide_fyv;
+			additionData.ρMax = 0.025;
+			additionData.ρMin_sv = 0.3 * ft_Divide_fyv;
 			break;
 		case 2:
-			additionData.rhoMin_LR = fmin(0.3, 65 * ft_Divide_fy) / 100;
-			additionData.rhoMin_M = fmin(0.25, 55 * ft_Divide_fy) / 100;
-			additionData.rhoMin_c_LR
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			additionData.ρMin_M = fmin(0.25, 55 * ft_Divide_fy) / 100;
+			additionData.ρMin_c_LR
+				= additionData.ρMin_c_M
 				= fmin(0.2, 45 * ft_Divide_fy) / 100;
-			additionData.rhoMax = 0.025;
-			additionData.rhoMin_sv = 0.28 * ft_Divide_fyv;
+			additionData.ρMax = 0.025;
+			additionData.ρMin_sv = 0.28 * ft_Divide_fyv;
 			break;
 		case 3:
 		case 4:
-			additionData.rhoMin_LR = fmin(0.25, 55 * ft_Divide_fy) / 100;
-			additionData.rhoMin_M = fmin(0.2, 45 * ft_Divide_fy) / 100;
-			additionData.rhoMin_c_LR
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR = fmin(0.25, 55 * ft_Divide_fy) / 100;
+			additionData.ρMin_M = fmin(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.ρMin_c_LR
+				= additionData.ρMin_c_M
 				= fmin(0.2, 45 * ft_Divide_fy) / 100;
-			additionData.rhoMax = 0.025;
-			additionData.rhoMin_sv = 0.26 * ft_Divide_fyv;
+			additionData.ρMax = 0.025;
+			additionData.ρMin_sv = 0.26 * ft_Divide_fyv;
 			break;
 		case 5:
-			additionData.rhoMin_LR 
-				= additionData.rhoMin_c_LR 
-				= additionData.rhoMin_M 
-				= additionData.rhoMin_c_M
+			additionData.ρMin_LR 
+				= additionData.ρMin_c_LR 
+				= additionData.ρMin_M 
+				= additionData.ρMin_c_M
 				= fmin(0.2, 45 * ft_Divide_fy) / 100;
-			additionData.rhoMax = 0.0275;
-			additionData.rhoMin_sv = 0.24 * ft_Divide_fyv;
+			additionData.ρMax = 0.0275;
+			additionData.ρMin_sv = 0.24 * ft_Divide_fyv;
 			break;
 		default:
 			std::cerr << "未知抗震构造等级！" << std::endl;
