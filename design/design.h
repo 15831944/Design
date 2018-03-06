@@ -45,10 +45,11 @@ private:
 		double ρmax;//最大配筋率
 		double ρmin_sv;//最小配箍率
 		//人防组合设计
-		double ξb_RF;
-		double ρmin_RF;
-		double ρmax_RF;
-		double ρmin_sv_RF;
+		βLimit;//延性限值
+		double ξb_AD;
+		double ρmin_AD;
+		double ρmax_AD;
+		double ρmin_sv_AD;
 		//地震组合设计
 		double ξb_E;
 		double γRE_M;//正截面γRE
@@ -63,7 +64,9 @@ private:
 	Beam::Data* data;
 //[]这些函数怎么能写成virtual？
 	void prepare();//准备数据
-	void setRebarRatio();//生成与梁抗震构造等级、梁类型有关的配筋率限值
+	void setParameter();//生成非地震组合设计相关参数
+	void setParameterAD();//生成人防组合设计相关参数
+	void setParameterE();//生成地震组合设计相关参数
 	void designM();//设计纵筋
 	void designV();//设计箍筋
 };

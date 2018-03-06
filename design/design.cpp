@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cmath>
 #include "design.h"
+#include "xxt.h"
 #include "concrete_design.h"//砼构件计算公式
 
 const double AS_SINGLE = 22.5;//单筋保护层额外厚度as=c+AS_SINGLE按10箍筋25纵筋考虑
@@ -8,8 +9,10 @@ const double AS_DUAL = 47.5;//双筋保护层额外厚度as=c+AS_DUAL按10箍筋25纵筋考虑
 const double ρ_LIMIT = 0.01;//控制是否按双排配筋计算的配筋率界限，ρ<ρ_LIMIT单排，ρ≥ρ_LIMIT双排
 
 //[portotype]
-///计算ξb
-double get_ξb_E(double ξb, int Nfb_gz);
+///计算ρmin_AD
+double calc_ρmin_AD();
+///计算ρmax_AD
+double calc_ρmax_AD();
 ///计算配筋
 static void calculateAs(double M, double b, double h, double as, double as_c, double fc, double fy, double fy_c, double alpha1, double kxiB, double ρmin_c, double& x, double& As, double& As_c);
 ///计算x
@@ -43,13 +46,9 @@ void DesignBeam::design()
 
 void DesignBeam::prepare()
 {
-	additionData.ξb = data->concrete->get_β1() / (1 + data->longitudinal->get_fy() / (data->longitudinal->get_E() * data->concrete->get_εcu()));
-	additionData.ξb_RF = additionData.ξb;//[]待定
-	additionData.ξb_E = get_ξb_E(additionData.ξb, data->Nfb_gz);
-	additionData.γRE_M = 0.75;
-	additionData.γRE_V = 0.85;
-	//生成与梁抗震构造等级、梁类型有关的配筋率限值
-	setRebarRatio();
+	void setParameter();
+	void setParameterAD();
+	void setParameterE();
 }
 
 void DesignBeam::designM()
@@ -110,53 +109,97 @@ void DesignBeam::designV()
 	
 }
 
-double get_ξb_E(double ξb, int Nfb_gz)
+void DesignBeam::setParameter()
 {
-	switch (Nfb_gz)
+	double ft_Divide_fy = data->concrete->get_ft() / data->longitudinal->get_fy();
+	double ft_Divide_fyv = data->concrete->get_ft() / data->stirrup->get_fyv();
+	additionData.ξb = data->concrete->get_β1() / (1 + data->longitudinal->get_fy() / (data->longitudinal->get_E() * data->concrete->get_εcu()));
+	additionData.ρmin = fmax(0.2, 45 * ft_Divide_fy) / 100; 
+	additionData.ρmax = 0.0275;
+	additionData.ρmin_sv = 0.24 * ft_Divide_fyv;
+	if(data->beamType == E_BeamType::E_BT_TRANSFER_BEAM)
 	{
-	case 0:
-	case 1:
-		return fmin(ξb, 0.25);
-	case 2:
-	case 3:
-		return fmin(ξb, 0.35);
-	default:
-		return ξb;
+		additionData.ρmin = 0.003;
+		additionData.ρmin_sv = 0.9 * ft_Divide_fyv;
 	}
 }
 
-void DesignBeam::setRebarRatio()
-{//[]把ξb都揉进来，或者把这部分都放到prepare里
+void DesignBeam::setParameterRF()
+{
+	additionData.βLimit = 1;//[]待确定 《人防规范》表4.6.2
+	additionData.ξb_AD = 0.5 / additionData.βLimit;//《人防规范》4.10.3
+	additionData.ρmin_AD = calc_ρmin_AD();
+	additionData.ρmax_AD = calc_ρmax_AD();
+	additionData.ρmin_sv_AD = 0.0015;//《人防规范》4.11.7
+}
+
+double calc_ρmin_AD()
+{//《人防规范》4.11.7
+	if(data->concrete->get_fcuk() < 35 + EPSILON)
+	{
+		return 0.0025;
+	}
+	else if((data->concrete->get_fcuk() < 55 + EPSILON)
+	{
+		return 0.003;
+	}
+	else
+	{
+		return 0.0035;
+	}
+}
+
+double calc_ρmax_AD()
+{//《人防规范》4.11.8
+	if(data->concrete->get_fcuk() < 25 + EPSILON)
+	{
+		return data->longitudinal->getName() < 335 + EPSILON ? 0.022 : 0.02;
+	}
+	else
+	{
+		return data->longitudinal->getName() < 335 + EPSILON ? 0.025 : 0.024;
+	}
+}
+
+void DesignBeam::setParameterE()
+{
+	additionData.γRE_M = 0.75;
+	additionData.γRE_V = 0.85;
 	double ft_Divide_fy = data->concrete->get_ft() / data->longitudinal->get_fy();
 	double ft_Divide_fyv = data->concrete->get_ft() / data->stirrup->get_fyv();
 	switch (data->beamType)
 	{
 	//转换梁
 	case E_BeamType::E_BT_TRANSFER_BEAM:
-		//非地震组合
-		additionData.ρmin = 0.003;
-		additionData.ρmin = 0.0275;
-		additionData.ρmin_sv = 0.9 * ft_Divide_fyv;
 		switch (data->Nfb_gz)
 		{
 		case 0:
+			ξb_E = fmin(0.25, additionData.ξb);
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
 				= 0.006;
+			additionData.ρmin_sv_E = 1.3 * ft_Divide_fyv;
 			additionData.ρmax_E = 0.025;
-			additionData.ρmin_sv = 1.3 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0.5;
+			minAsRatioContinue = 0.25;
 		case 1:
+			ξb_E = fmin(0.25, additionData.ξb);
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
 				= 0.005;
 			additionData.ρmax_E = 0.025;
-			additionData.ρmin_sv = 1.2 * ft_Divide_fyv;
+			additionData.ρmin_sv_E = 1.2 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0.5;
+			minAsRatioContinue = 0.25;
 		case 2:
+			ξb_E = fmin(0.35, additionData.ξb);
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
 				= 0.004;
 			additionData.ρmax_E = 0.025;
-			additionData.ρmin_sv = 1.1 * ft_Divide_fyv;
+			additionData.ρmin_sv_E = 1.1 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0.3;
+			minAsRatioContinue = 0.25;
 		case 3:
 		case 4:
 			std::cerr << "转换梁抗震构造等级至少为二级！" << std::endl;
@@ -164,9 +207,11 @@ void DesignBeam::setRebarRatio()
 		case 5:
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
-				= 0.003;
-			additionData.ρmax = 0.0275;
-			additionData.ρmin_sv = 0.9 * ft_Divide_fyv;
+				= additionData.ρmin;
+			additionData.ρmax_E = additionData.ρmax;
+			additionData.ρmin_sv_E = additionData.ρmin_sv;
+			minAs_cRatio_LR = 0;
+			minAsRatioContinue = 0;
 		default:
 			std::cerr << "未知抗震构造等级！" << std::endl;
 			break;
@@ -178,36 +223,59 @@ void DesignBeam::setRebarRatio()
 		switch (data->Nfb_gz)
 		{
 		case 0:
-			additionData.ρmin_E_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
-			additionData.ρmin_E_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			ξb_E = fmin(0.25, additionData.ξb);
+			additionData.ρmin_E_LR = fmax(0.4, 80 * ft_Divide_fy) / 100;
+			additionData.ρmin_E_M = fmax(0.3, 65 * ft_Divide_fy) / 100;
 			additionData.ρmax_E = 0.025;
-			additionData.ρmin_sv = 0.33 * ft_Divide_fyv;
+			additionData.ρmin_sv_E = 0.33 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0.5;
+			minAsRatioContinue = 0.25;
 			break;
 		case 1:
-			additionData.ρmin_E_LR = fmin(0.4, 80 * ft_Divide_fy) / 100;
-			additionData.ρmin_E_M = fmin(0.3, 65 * ft_Divide_fy) / 100;
+			ξb_E = fmin(0.25, additionData.ξb);
+			additionData.ρmin_E_LR = fmax(0.4, 80 * ft_Divide_fy) / 100;
+			additionData.ρmin_E_M = fmax(0.3, 65 * ft_Divide_fy) / 100;
 			additionData.ρmax_E = 0.025;
-			additionData.ρmin_sv = 0.3 * ft_Divide_fyv;
+			additionData.ρmin_sv_E = 0.3 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0.5;
+			minAsRatioContinue = 0.25;
 			break;
 		case 2:
-			additionData.ρmin_E_LR = fmin(0.3, 65 * ft_Divide_fy) / 100;
-			additionData.ρmin_E_M = fmin(0.25, 55 * ft_Divide_fy) / 100;
+			ξb_E = fmin(0.35, additionData.ξb);
+			additionData.ρmin_E_LR = fmax(0.3, 65 * ft_Divide_fy) / 100;
+			additionData.ρmin_E_M = fmax(0.25, 55 * ft_Divide_fy) / 100;
 			additionData.ρmax_E = 0.025;
-			additionData.ρmin_sv = 0.28 * ft_Divide_fyv;
+			additionData.ρmin_sv_E = 0.28 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0.3;
+			minAsRatioContinue = 0.25;
 			break;
 		case 3:
-		case 4:
-			additionData.ρmin_E_LR = fmin(0.25, 55 * ft_Divide_fy) / 100;
-			additionData.ρmin_E_M = fmin(0.2, 45 * ft_Divide_fy) / 100;
+			ξb_E = fmin(0.35, additionData.ξb);
+			additionData.ρmin_E_LR = fmax(0.25, 55 * ft_Divide_fy) / 100;
+			additionData.ρmin_E_M = fmax(0.2, 45 * ft_Divide_fy) / 100;
 			additionData.ρmax_E = 0.025;
-			additionData.ρmin_sv = 0.26 * ft_Divide_fyv;
+			additionData.ρmin_sv_E = 0.26 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0.3;
+			minAsRatioContinue = 0;
+			break;
+		case 4:
+			ξb_E = additionData.ξb;
+			additionData.ρmin_E_LR = fmax(0.25, 55 * ft_Divide_fy) / 100;
+			additionData.ρmin_E_M = fmax(0.2, 45 * ft_Divide_fy) / 100;
+			additionData.ρmax_E = 0.025;
+			additionData.ρmin_sv_E = 0.26 * ft_Divide_fyv;
+			minAs_cRatio_LR = 0;
+			minAsRatioContinue = 0;
 			break;
 		case 5:
+			ξb_E = additionData.ξb;
 			additionData.ρmin_E_LR 
 				= additionData.ρmin_E_M 
-				= fmin(0.2, 45 * ft_Divide_fy) / 100;
-			additionData.ρmax = 0.0275;
-			additionData.ρmin_sv = 0.24 * ft_Divide_fyv;
+				= additionData.ρmin;
+			additionData.ρmax_E = additionData.ρmax;
+			additionData.ρmin_sv_E = additionData.ρmin_sv;
+			minAs_cRatio_LR = 0;
+			minAsRatioContinue = 0;
 			break;
 		default:
 			std::cerr << "未知抗震构造等级！" << std::endl;
