@@ -45,7 +45,7 @@ private:
 		double ρmax;//最大配筋率
 		double ρmin_sv;//最小配箍率
 		//人防组合设计
-		βLimit;//延性限值
+		double βLimit;//延性限值
 		double ξb_AD;
 		double ρmin_AD;
 		double ρmax_AD;
@@ -69,4 +69,7 @@ private:
 	void setParameterE();//生成地震组合设计相关参数
 	void designM();//设计纵筋
 	void designV();//设计箍筋
+
+	double calc_ρmin_AD();//计算ρmin_AD
+	double calc_ρmax_AD();//计算ρmax_AD
 };
