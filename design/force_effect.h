@@ -74,17 +74,22 @@ struct Force1
 		this->M3 /= n;
 		return *this;
 	}
+  friend std::ostream& operator<<(std::ostream& os, const Force1& f)//[XXT]加friend为了使这个函数成为Force1的友元函数
+  {
+    os << "N=" << f.N << std::endl;
+    os << "V2=" << f.V2 << std::endl;
+    os << "V3=" << f.V3 << std::endl;
+    os << "T=" << f.T << std::endl;
+    os << "M2=" << f.M2 << std::endl;
+    os << "M3=" << f.M3 << std::endl;
+    return os;
+  }
 };
+//[XXT]
 
-std::ostream& operator<<(std::ostream& os, const Force1& f)
+Force1& operator+(Force1& f1, Force1& f2)
 {
-	os << "N=" << f.N << std::endl;
-	os << "V2=" << f.V2 << std::endl;
-	os << "V3=" << f.V3 << std::endl;
-	os << "T=" << f.T << std::endl;
-	os << "M2=" << f.M2 << std::endl;
-	os << "M3=" << f.M3 << std::endl;
-	return os;
+  return f1;
 }
 
 class ForceEffect
