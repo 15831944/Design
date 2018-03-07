@@ -16,6 +16,27 @@ enum E_LengthUnit
 	E_LU_mm = 1,//mm
 	E_LU_m = 1000//m
 };
+///抗震等级
+//[]暂时没用上
+enum E_NFB
+{
+	E_NFB_LV0,
+	E_NFB_LV1,
+	E_NFB_LV2,
+	E_NFB_LV3,
+	E_NFB_LV4,
+	E_NFB_NULL
+};
+///组合类型
+enum E_CombinationType
+{
+	E_CT_CASE,//单工况
+	E_CT_LOAD,//非地震组合
+	E_CT_SEISMIC,//地震组合
+	E_CT_AD,//人防组合
+	E_CT_NOMINAL,//标准组合
+	E_CT_QP//准永久组合
+};
 
 //[const]
 const double EPSILON = 1e-6;//double误差值

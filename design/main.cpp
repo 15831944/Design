@@ -18,22 +18,34 @@
 //[portotype]
 void test();
 ///准备数据
-void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap);
+void prepareInfo
+	(std::map<double, Concrete*>& concreteMap
+	, std::map<double, Rebar*>& rebarMap
+	, std::map<double, Steel*>& steelMap
+	, std::vector<std::string>& factorFC
+	, std::vector<std::string>& factorNC
+	, std::vector<std::string>& factorQPC
+	);
 ///获取梁信息
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap, std::set<Section*>& sectionSet);
-
+void getInfo
+	(Beam& beam
+	, std::map<double, Concrete*>& concreteMap
+	, std::map<double, Rebar*>& rebarMap
+	, std::map<double, Steel*>& steelMap
+	, std::set<Section*>& sectionSet
+	);
 
 int main(){
-	Force1 a = Force1(1, 1, 1, 1, 1, 1);
-	std::cout << a << std::endl;
-	
 //	test();
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	std::map<double, Concrete*> concreteMap;//砼材料表
 	std::map<double, Rebar*> rebarMap;//钢筋材料表
 	std::map<double, Steel*> steelMap;//钢材表
+	std::vector<std::string> factorFC;//基本组合系数表
+	std::vector<std::string> factorNC;//标准组合系数表
+	std::vector<std::string> factorQPC;//准永久组合系数表
 
-	prepareInfo(concreteMap, rebarMap, steelMap);
+	prepareInfo(concreteMap, rebarMap, steelMap, factorFC, factorNC, factorQPC);
 	while(true){
 		Beam beam;
 		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet);
@@ -47,7 +59,54 @@ int main(){
 	return 0;
 }
 
-void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap, std::set<Section*>& sectionSet){
+void prepareInfo
+(std::map<double, Concrete*>& concreteMap
+, std::map<double, Rebar*>& rebarMap
+, std::map<double, Steel*>& steelMap
+, std::vector<std::string>& factorFC
+, std::vector<std::string>& factorNC
+, std::vector<std::string>& factorQPC
+){
+	//初始化砼材料
+	for (int i = 15; i <= 80; i += 5)
+	{
+		double curName = i;
+		Concrete* curConcrete = new Concrete(curName);
+		concreteMap.insert(concreteMap.end(), std::pair<double, Concrete*>(curName, curConcrete));
+	}
+	//初始化钢筋材料
+	double rebar[4] = { 300, 335, 400, 500 };
+	for each(double it in rebar)
+	{
+		double curName = it;
+		Rebar* curRebar = new Rebar(curName);
+		rebarMap.insert(rebarMap.end(), std::pair<double, Rebar*>(curName, curRebar));
+	}
+	//初始化钢材
+	double steel[4] = { 235, 345, 390, 420 };
+	for each(double it in steel)
+	{
+		double curName = it;
+		Steel* curSteel = new Steel(curName);
+		steelMap.insert(steelMap.end(), std::pair<double, Steel*>(curName, curSteel));
+	}
+	//初始化基本组合系数表
+	factorFC.insert(factorFC.end(), "1.35D+0.98L");
+	factorFC.insert(factorFC.end(), "1.2D+1.4L");
+	factorFC.insert(factorFC.end(), "1D+1.2L");
+	//初始化标准组合系数表
+	factorNC.insert(factorNC.end(), "1D+1L");
+	//初始化准永久组合系数表
+	factorQPC.insert(factorQPC.end(), "1D+1L");
+}
+
+void getInfo
+(Beam& beam
+, std::map<double, Concrete*>& concreteMap
+, std::map<double, Rebar*>& rebarMap
+, std::map<double, Steel*>& steelMap
+, std::set<Section*>& sectionSet
+){
 	beam.setCalculateParameter(1.0, 5, 5);
 	beam.setBeamType((E_BeamType)0);
 	Section* section = new RectSection(300, 700);
@@ -94,32 +153,6 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 	std::cin >> n >> v2 >> v3 >> t >> m2 >> m3;
 	beam.setForce(n, v2, v3, t, m2, m3);
 	*/
-}
-
-void prepareInfo(std::map<double, Concrete*>& concreteMap, std::map<double, Rebar*>& rebarMap, std::map<double, Steel*>& steelMap){
-	//初始化砼材料
-	for(int i = 15; i <= 80; i +=5)
-	{
-		double curName = i;
-		Concrete* curConcrete = new Concrete(curName);
-		concreteMap.insert(concreteMap.end(), std::pair<double, Concrete*>(curName, curConcrete));
-	}
-	//初始化钢筋材料
-	double rebar[4] = {300, 335, 400, 500};
-	for each(double it in rebar)
-	{
-		double curName = it;
-		Rebar* curRebar = new Rebar(curName);
-		rebarMap.insert(rebarMap.end(), std::pair<double, Rebar*>(curName, curRebar));
-	}
-	//初始化钢材
-	double steel[4] = {235, 345, 390, 420};
-	for each(double it in steel)
-	{
-		double curName = it;
-		Steel* curSteel = new Steel(curName);
-		steelMap.insert(steelMap.end(), std::pair<double, Steel*>(curName, curSteel));
-	}
 }
 
 void test()
