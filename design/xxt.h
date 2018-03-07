@@ -27,6 +27,17 @@ enum E_NFB
 	E_NFB_LV4,
 	E_NFB_NULL
 };
+///工况类型
+enum E_SingleCaseType
+{
+	E_SCT_DEAD,//恒载
+	E_SCT_LIVE,//活载
+	E_SCT_WIND,//风载
+	E_SCT_TEMPERATURE,//温度作用
+	E_SCT_PRESTRESS,//预应力
+	E_SCT_AD,//人防荷载
+	E_SCT_E//地震作用
+};
 ///组合类型
 enum E_CombinationType
 {

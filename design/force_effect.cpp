@@ -5,7 +5,7 @@
 //[prototype]
 ///荷载组合
 Force1 generateCombination
-	(const std::map<std::string, Force1>& m_caseMap
+	(const std::map<std::string, CaseData>& m_caseMap
 	, const std::string line
 	);
 ///分析组合表达式
@@ -16,6 +16,9 @@ void analyseCombination
 
 ForceEffect::ForceEffect()
 {
+	m_FactorFC = NULL;
+	m_FactorNC = NULL;
+	m_FactorQPC = NULL;
 }
 
 
@@ -32,8 +35,26 @@ void ForceEffect::setFC(std::vector<std::string>* factorFC)
 	}
 }
 
-Force1 generateCombination
-(const std::map<std::string, Force1>& m_caseMap
+void ForceEffect::setNC(std::vector<std::string>* factorNC)
+{
+	this->m_FactorNC = factorNC;
+	for each(std::string  line in *m_FactorNC){
+		Force1 curForce = generateCombination(m_caseMap, line);
+		m_NominalCombination.insert(m_NominalCombination.end(), ForceData(curForce, E_CombinationType::E_CT_NOMINAL));
+	}
+}
+
+void ForceEffect::setQPC(std::vector<std::string>* factorQPC)
+{
+	this->m_FactorQPC = factorQPC;
+	for each(std::string  line in *m_FactorQPC){
+		Force1 curForce = generateCombination(m_caseMap, line);
+		m_QuasiPermanentCombination.insert(m_QuasiPermanentCombination.end(), ForceData(curForce, E_CombinationType::E_CT_QP));
+	}
+}
+
+Force1 generateCombination//[]需要添加识别组合类型的函数
+(const std::map<std::string, CaseData>& m_caseMap
 , const std::string line
 ){
 	std::vector<std::string> combination;//带系数的字段，如1.2D
@@ -48,7 +69,7 @@ Force1 generateCombination
 		ss >> factor >> caseName;
 		if (m_caseMap.count(caseName) == 1)
 		{
-			Force1 curForce = m_caseMap.at(caseName);
+			Force1 curForce = m_caseMap.at(caseName).force;
 			result = result + curForce * factor;
 		}
 	}

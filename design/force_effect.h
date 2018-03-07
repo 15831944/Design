@@ -111,6 +111,17 @@ struct ForceData
 
 //*------------------------------------*//
 
+struct CaseData
+{
+	Force1 force;//内力
+	E_SingleCaseType caseType;//组合类型
+	CaseData(Force1 f, E_SingleCaseType cT)
+		:force(f), caseType(cT)
+	{}
+};
+
+//*------------------------------------*//
+
 class ForceEffect
 {
 public:
@@ -120,9 +131,9 @@ public:
 	void setCaseMap(std::map<std::string, Force1>* m_caseMap);//设置单工况内力//[]没想好怎么弄
 	void setFC(std::vector<std::string>* factorFC);//设置基本组合表
 	void setNC(std::vector<std::string>* factorNC);//设置标准组合表
-	void setQP(std::vector<std::string>* factorQPC);//设置准永久组合表
+	void setQPC(std::vector<std::string>* factorQPC);//设置准永久组合表
 //[]一下内容有必要放到private里吗？
-	std::map<std::string, Force1> m_caseMap;//单工况内力
+	std::map<std::string, CaseData> m_caseMap;//单工况内力
 	std::vector<std::string>* m_FactorFC;//基本组合系数表
 	std::vector<std::string>* m_FactorNC;//标准组合系数表
 	std::vector<std::string>* m_FactorQPC;//准永久组合系数表

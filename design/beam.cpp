@@ -45,6 +45,19 @@ void Beam::setForce(double N, double V2, double V3, double T, double M2, double 
 	m_FundamentalCombination.push_back(force);
 }
 
+void Beam::setForceData
+(std::map<std::string, CaseData>* caseMap//[]没想好这个以什么方式传
+, std::vector<std::string>* factorFC
+, std::vector<std::string>* factorNC
+, std::vector<std::string>* factorQPC
+){
+	forceData.setCaseMap(caseMap);
+	forceData.setFC(factorFC);
+	forceData.setNC(factorNC);
+	forceData.setQPC(factorQPC);
+
+}
+
 void Beam::showResult()
 {
 	for (int i = 0; i < m_result.size(); i++)
