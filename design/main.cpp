@@ -12,6 +12,7 @@
 #include "beam.h"
 #include "section.h"
 #include "material.h"
+#include "force_effect.h"
 #include "xxt.h"
 
 //[portotype]
@@ -23,6 +24,9 @@ void getInfo(Beam& beam, std::map<double, Concrete*>& concreteMap, std::map<doub
 
 
 int main(){
+	Force1 a = Force1(1, 1, 1, 1, 1, 1);
+	std::cout << a << std::endl;
+	
 //	test();
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	std::map<double, Concrete*> concreteMap;//砼材料表
