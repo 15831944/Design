@@ -8,7 +8,7 @@
 #include <set>
 #include <map>
 
-struct Force1
+struct Force
 {
 	double N;
 	double V2;
@@ -17,11 +17,11 @@ struct Force1
 	double M2;
 	double M3;
 
-	Force1(double N, double V2, double V3, double T, double M2, double M3)
+	Force(double N, double V2, double V3, double T, double M2, double M3)
 		:N(N), V2(V2), V3(V3), T(T), M2(M2), M3(M3)
 	{}
 
-	Force1& operator=(const Force1& f)
+	Force& operator=(const Force& f)
 	{
 		if (this != &f)
 		{
@@ -34,7 +34,7 @@ struct Force1
 		}
 		return *this;
 	}
-	Force1& operator+(const Force1& f)
+	Force& operator+(const Force& f)
 	{
 		this->N += f.N;
 		this->V2 += f.V2;
@@ -44,7 +44,7 @@ struct Force1
 		this->M3 += f.M3;
 		return *this;
 	}
-	Force1& operator-(const Force1& f)
+	Force& operator-(const Force& f)
 	{
 		this->N -= f.N;
 		this->V2 -= f.V2;
@@ -54,7 +54,7 @@ struct Force1
 		this->M3 -= f.M3;
 		return *this;
 	}
-	Force1& operator*(double n)
+	Force& operator*(double n)
 	{
 		this->N *= n;
 		this->V2 *= n;
@@ -64,7 +64,7 @@ struct Force1
 		this->M3 *= n;
 		return *this;
 	}
-	Force1& operator*(const double n[])
+	Force& operator*(const double n[])
 	{//此处要求n为6个double的array
 		this->N *= n[0];
 		this->V2 *= n[1];
@@ -74,7 +74,7 @@ struct Force1
 		this->M3 *= n[5];
 		return *this;
 	}
-	Force1& operator/(double n)
+	Force& operator/(double n)
 	{
 		if (abs(n - 0) <= EPSILON) std::cerr << "除数为零！" << std::endl;
 		this->N /= n;
@@ -85,7 +85,7 @@ struct Force1
 		this->M3 /= n;
 		return *this;
 	}
-	friend std::ostream& operator<<(std::ostream& os, const Force1& f)//[XXT]加friend为了使这个函数成为Force1的友元函数
+	friend std::ostream& operator<<(std::ostream& os, const Force& f)//[XXT]加friend为了使这个函数成为Force的友元函数
 	{//[XXT]这个函数属于operator的成员函数，用在struct里时需要加friend来访问struct里的内容
 		//[XXT]operator有unary_function(规定传入1个变量)和binary_function(规定传入2个变量)
 		os << "N=" << f.N << std::endl;
@@ -99,24 +99,50 @@ struct Force1
 };
 
 //*------------------------------------*//
-
-struct ForceData
+///工况类型
+enum E_SingleCaseType//[]本来想把这个枚举放到ForceEffort类中，未遂
 {
-	Force1 force;//内力
-	E_CombinationType combinationType;//组合类型
-	ForceData(Force1 f, E_CombinationType cT)
-		:force(f), combinationType(cT)
-	{}
+	E_SCT_DEAD,//恒载
+	E_SCT_LIVE,//活载
+	E_SCT_WIND,//风载
+	E_SCT_TEMPERATURE,//温度作用
+	E_SCT_PRESTRESS,//预应力
+	E_SCT_AD,//人防荷载
+	E_SCT_E//地震作用
 };
-
-//*------------------------------------*//
 
 struct CaseData
 {
-	Force1 force;//内力
+	Force force;//内力
 	E_SingleCaseType caseType;//组合类型
-	CaseData(Force1 f, E_SingleCaseType cT)
+	CaseData(Force f, E_SingleCaseType cT)
 		:force(f), caseType(cT)
+	{}
+	void setData(Force f, E_SingleCaseType cT)
+	{
+		this->force = f;
+		this->caseType = cT;
+	}
+};
+
+//*------------------------------------*//
+///组合类型
+enum E_CombinationType
+{
+	E_CT_CASE,//单工况
+	E_CT_LOAD,//非地震组合
+	E_CT_SEISMIC,//地震组合
+	E_CT_AD,//人防组合
+	E_CT_NOMINAL,//标准组合
+	E_CT_QP//准永久组合
+};
+
+struct ForceData
+{
+	Force force;//内力
+	E_CombinationType combinationType;//组合类型
+	ForceData(Force f, E_CombinationType cT)
+		:force(f), combinationType(cT)
 	{}
 };
 
@@ -132,6 +158,9 @@ public:
 	void setFC(std::vector<std::string>* factorFC);//设置基本组合表
 	void setNC(std::vector<std::string>* factorNC);//设置标准组合表
 	void setQPC(std::vector<std::string>* factorQPC);//设置准永久组合表
+	bool hasFC(){ return m_FactorFC != NULL; }//检测是否包含FC
+	bool hasNC(){ return m_FactorNC != NULL; }//检测是否包含NC
+	bool hasQPC(){ return m_FactorQPC != NULL; }//检测是否包含QPC
 	void calcFC();//计算基本组合
 	void calcNC();//计算标准组合
 	void calcQPC();//计算准永久组合
@@ -143,9 +172,16 @@ public:
 	std::vector<ForceData> m_FundamentalCombination;//基本组合
 	std::vector<ForceData> m_NominalCombination;//标准组合
 	std::vector<ForceData> m_QuasiPermanentCombination;//准永久组合
-private:
-	void calcCombination//[]这个函数只给cpp用，需要放到类里作为private吗？
+
+
+private://仅内部使用的次要子函数
+	void calcCombination//根据荷载组合系数表、单工况内力生成对应的荷载组合
 		(std::vector<std::string>* factorTable
-		, std::vector<ForceData>& combinationTable);
+		, std::vector<ForceData>& combinationTable
+		, int stage);//0 - 基本组合, 1 - 标准组合, 2 - 准永久组合
+	ForceData calcCombineForce(const std::string line, int stage);//根据具体的内力组合表达式、单工况内力生成组合后内力结果,0-基本组合,1-标准组合,2-准永久组合
+	void analyseCombination//将内力组合表达式拆解成带系数的字段，如1.2D、1.4L
+		(const std::string& line
+		, std::vector<std::string>& combination);
 };
 

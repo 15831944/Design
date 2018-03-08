@@ -1,32 +1,19 @@
-#include "force_effect.h"
-#include "iostream"
+#include <iostream>
 #include <sstream>
 
-//[prototype]
-///生成荷载组合
-void calcCombination//[]这个函数只给cpp用，需要放到类里作为private吗？
-	(std::vector<std::string>* factorTable
-	, std::vector<ForceData>& combinationTable);
-
-///进行荷载组合
-Force1 generateCombination
-	(const std::map<std::string, CaseData>& m_caseMap
-	, const std::string line);
-///分析组合表达式
-void analyseCombination
-	(const std::string& line
-	, std::vector<std::string>& combination);
+#include "force_effect.h"
 
 ForceEffect::ForceEffect()
 {
+	m_caseMap = NULL;
 	m_FactorFC = NULL;
 	m_FactorNC = NULL;
 	m_FactorQPC = NULL;
 }
 
-
 ForceEffect::~ForceEffect()
 {
+	delete m_caseMap;
 }
 
 void ForceEffect::setCaseMap(std::map<std::string, CaseData>* caseMap)
@@ -51,55 +38,80 @@ void ForceEffect::setQPC(std::vector<std::string>* factorQPC)
 
 void ForceEffect::calcFC()
 {
-	calcCombination(m_FactorFC, m_FundamentalCombination);
+	calcCombination(m_FactorFC, m_FundamentalCombination, 0);
 }
 
 void ForceEffect::calcNC()
 {
-	calcCombination(m_FactorNC, m_NominalCombination);
+	calcCombination(m_FactorNC, m_NominalCombination, 1);
 }
 
 void ForceEffect::calcQPC()
 {
-	calcCombination(m_FactorQPC, m_QuasiPermanentCombination);
+	calcCombination(m_FactorQPC, m_QuasiPermanentCombination, 2);
 }
 
-void calcCombination
-	(const std::map<std::string, CaseData>& caseMap
-	, std::vector<std::string>* factorTable
-	, std::vector<ForceData>& combinationTable)
+void ForceEffect::calcCombination
+	(std::vector<std::string>* factorTable
+	, std::vector<ForceData>& combinationTable
+	, int stage)//0 - 基本组合, 1 - 标准组合, 2 - 准永久组合
 {
 	for each(std::string  line in *factorTable){
-		//[]这里改成传出forcedata类型，里面计算好组合类型
-		Force1 curForce = generateCombination(caseMap, line);
-		combinationTable.insert(combinationTable.end(), ForceData(curForce, E_CombinationType::E_CT_QP));
+		ForceData curForceData = calcCombineForce(line, stage);//根据第i个荷载组合表达式line和单工况内力生成对应的组合内力
+		combinationTable.insert(combinationTable.end(), curForceData);
 	}
 }
 
-Force1 generateCombination//[]需要添加识别组合类型的函数
-	(const std::map<std::string, CaseData>& m_caseMap
-	, const std::string line)
+ForceData ForceEffect::calcCombineForce(const std::string line, int stage)//[]需要添加识别组合类型的函数
 {
-	std::vector<std::string> combination;//带系数的字段，如1.2D
+	std::vector<std::string> combination;//将line拆成带系数的字段，如1.2D
 	analyseCombination(line, combination);
-	Force1 result = Force1(0, 0, 0, 0, 0, 0);//组合内力
+	ForceData result = ForceData(Force(0, 0, 0, 0, 0, 0), E_CombinationType::E_CT_LOAD);//组合内力
+	E_SingleCaseType maxSingleCaseType = E_SingleCaseType::E_SCT_DEAD;
 	for each(std::string segment in combination)
 	{
 		std::stringstream ss;
 		ss << segment;
 		double factor = 0;
 		std::string caseName;
-		ss >> factor >> caseName;
-		if (m_caseMap.count(caseName) == 1)
+		ss >> factor >> caseName;//[]stringstream对于字母e也识别为了数字
+		if (m_caseMap->count(caseName) == 1)
 		{
-			Force1 curForce = m_caseMap.at(caseName).force;
-			result = result + curForce * factor;
+			CaseData curCaseData = m_caseMap->at(caseName);
+			if (maxSingleCaseType < curCaseData.caseType) maxSingleCaseType = curCaseData.caseType;
+			result.force = result.force + curCaseData.force * factor;
 		}
+	}
+	switch (stage)
+	{
+	case 0:
+		switch (maxSingleCaseType)
+		{
+		case E_SingleCaseType::E_SCT_AD:
+			result.combinationType = E_CombinationType::E_CT_AD;
+			break;
+		case E_SingleCaseType::E_SCT_E:
+			result.combinationType = E_CombinationType::E_CT_SEISMIC;
+			break;
+		default:
+			result.combinationType = E_CombinationType::E_CT_LOAD;
+			break;
+		}
+		break;
+	case 1:
+		result.combinationType = E_CombinationType::E_CT_NOMINAL;
+		break;
+	case 2:
+		result.combinationType = E_CombinationType::E_CT_QP;
+		break;
+	default:
+		std::cerr << "未知组合类型！" << std::endl;
+		break;
 	}
 	return result;
 }
 
-void analyseCombination
+void ForceEffect::analyseCombination
 	(const std::string& line
 	, std::vector<std::string>& combination)
 {

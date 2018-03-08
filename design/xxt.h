@@ -27,41 +27,9 @@ enum E_NFB
 	E_NFB_LV4,
 	E_NFB_NULL
 };
-///工况类型
-enum E_SingleCaseType
-{
-	E_SCT_DEAD,//恒载
-	E_SCT_LIVE,//活载
-	E_SCT_WIND,//风载
-	E_SCT_TEMPERATURE,//温度作用
-	E_SCT_PRESTRESS,//预应力
-	E_SCT_AD,//人防荷载
-	E_SCT_E//地震作用
-};
-///组合类型
-enum E_CombinationType
-{
-	E_CT_CASE,//单工况
-	E_CT_LOAD,//非地震组合
-	E_CT_SEISMIC,//地震组合
-	E_CT_AD,//人防组合
-	E_CT_NOMINAL,//标准组合
-	E_CT_QP//准永久组合
-};
 
 //[const]
 const double EPSILON = 1e-6;//double误差值
-
-//[struct]
-struct Force
-{//内力
-	double N;
-	double V2;
-	double V3;
-	double T;
-	double M2;
-	double M3;
-};
 
 //stage:0-内插;1-左侧外差;2-右侧外差;3-双侧外差
 double interpolation(double x1, double y1, double x2, double y2, double x, int stage);//差值计算

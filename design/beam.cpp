@@ -8,7 +8,6 @@ Beam::Beam()
 	setMaterial(NULL, NULL, NULL, NULL);
 	setCalculateParameter(0, 5, 5);
 	setBeamType(E_BeamType::E_BT_BEAM);
-	setCheck();
 }
 
 Beam::~Beam(){}
@@ -39,23 +38,23 @@ void Beam::setBeamType(E_BeamType beamType)
 	data.beamType = beamType;
 }
 
-void Beam::setForce(double N, double V2, double V3, double T, double M2, double M3)
-{
-	Force force = { N, V2, V3, T, M2, M3 };
-	m_FundamentalCombination.push_back(force);
-}
-
 void Beam::setForceData
-(std::map<std::string, CaseData>* caseMap//[]单工况内力看在Beam类里面生成，还是在main里生成传进来
+(std::map<std::string, CaseData>* caseMap
 , std::vector<std::string>* factorFC
 , std::vector<std::string>* factorNC
 , std::vector<std::string>* factorQPC
-){//[]待改
-	//forceData.setCaseMap(caseMap);
-	//forceData.setFC(factorFC);
-	//forceData.setNC(factorNC);
-	//forceData.setQPC(factorQPC);
+){
+	forceData.setCaseMap(caseMap);
+	forceData.setFC(factorFC);
+	forceData.setNC(factorNC);
+	forceData.setQPC(factorQPC);
+}
 
+void Beam::calcForceData()
+{
+	if (forceData.hasFC()) forceData.calcFC();
+	if (forceData.hasNC()) forceData.calcNC();
+	if (forceData.hasQPC()) forceData.calcQPC();
 }
 
 void Beam::showResult()
@@ -71,9 +70,4 @@ void Beam::showResult()
 		std::cout << "Asv=" << m_result[i].Asv << "  ρsv=" << m_result[i].ρsv << std::endl;
 		std::cout << std::endl;
 	}
-}
-
-void Beam::setCheck()
-{
-	
 }

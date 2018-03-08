@@ -39,6 +39,12 @@ void getInfo
 	);
 
 int main(){
+	//[]stringstream对于字母e也识别为了数字，怎么处理？
+	std::stringstream ss;
+	ss << "1.2E 1.4e 1.41";
+	double a, b, c;
+	ss >> a >> b >> c;
+
 //	test();
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	std::map<double, Concrete*> concreteMap;//砼材料表
@@ -52,6 +58,7 @@ int main(){
 	while(true){
 		Beam beam;
 		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet, factorFC, factorNC, factorQPC);
+		beam.calcForceData();
 		DesignBeam designBeam;
 		designBeam.setData(&beam);
 		designBeam.design();
@@ -94,13 +101,14 @@ void prepareInfo
 		steelMap.insert(steelMap.end(), std::pair<double, Steel*>(curName, curSteel));
 	}
 	//初始化基本组合系数表
+	//注意保证单工况名称与这里的名称能对上，否则单工况内力取0
 	factorFC.insert(factorFC.end(), "1.35D+0.98L");
-	factorFC.insert(factorFC.end(), "1.2D+1.4L");
-	factorFC.insert(factorFC.end(), "1D+1.2L");
+	factorFC.insert(factorFC.end(), "1.2D+0.6L+1.3E");
+	factorFC.insert(factorFC.end(), "1D+1AD");
 	//初始化标准组合系数表
 	factorNC.insert(factorNC.end(), "1D+1L");
 	//初始化准永久组合系数表
-	factorQPC.insert(factorQPC.end(), "1D+1L");
+	factorQPC.insert(factorQPC.end(), "1D+0.6L");
 }
 
 void getInfo
@@ -122,10 +130,19 @@ void getInfo
 	Rebar* rebarSPt = getMapValueClassPt(rebarMap, 400.0);
 	Steel* steelPt = getMapValueClassPt(steelMap, 235.0);
 	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
-	beam.setForceData(NULL, &factorFC, &factorNC, &factorQPC);//[]这里NULL的位置是单工况表的指针
 
-	beam.setForce(200, 300, 400, 100, 1200, 368);
-	beam.setForce(200, 300, 400, 100, 1200, 314);
+	//此阶段输入单工况内力，其中CaseData由 内力、标识符 组成，目前单工况map放在heap中传指针，我没想出更好的办法
+	std::map<std::string, CaseData>* caseMap = new std::map<std::string, CaseData>();//单工况内力放在heap中传入指针给Beam，在Beam中析构
+	CaseData curCaseData = CaseData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_DEAD);;
+	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("D", curCaseData));
+	curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_LIVE);
+	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("L", curCaseData));
+	curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_AD);
+	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("AD", curCaseData));
+	curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_E);
+	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("E", curCaseData));
+
+	beam.setForceData(caseMap, &factorFC, &factorNC, &factorQPC);
 	return;
 	/*-----以上为临时测试内容-----*/
 

@@ -43,14 +43,14 @@ void DesignBeam::prepare()
 	setParameter();
 	setParameterAD();
 	setParameterE();
-	beam->m_result.resize(beam->m_FundamentalCombination.size());
+	beam->m_result.resize(beam->forceData.m_FundamentalCombination.size());
 }
 
 void DesignBeam::designULS()
 {
-	for(int i = 0; i < beam->m_FundamentalCombination.size(); i++)
+	for(int i = 0; i < beam->forceData.m_FundamentalCombination.size(); i++)
 	{
-		designSection(beam->m_FundamentalCombination[i], beam->m_result[i]);
+		designSection(beam->forceData.m_FundamentalCombination[i].force, beam->m_result[i]);
 	}
 }
 
