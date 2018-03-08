@@ -121,7 +121,7 @@ void getInfo
 , std::vector<std::string>& factorNC
 , std::vector<std::string>& factorQPC
 ){
-	beam.setCalculateParameter(1.0, 5, 5);
+	beam.setCalculateParameter(1.0, E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
 	beam.setBeamType((E_BeamType)0);
 	Section* section = new RectSection(300, 700);
 	beam.setSection(section, 20);
@@ -149,7 +149,7 @@ void getInfo
 	/*
 	std::cout << "安全系数、抗震等级、抗震构造等级" << std::endl;
 	double γ0;
-	int Nfb, Nfb_gz;
+	E_NFB Nfb, Nfb_gz;
 	std::cin >> γ0 >> Nfb >> Nfb_gz;
 	beam.setCalculateParameter(γ0, Nfb, Nfb_gz);
 

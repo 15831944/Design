@@ -20,7 +20,6 @@ Design::~Design(){}
 DesignBeam::DesignBeam(Beam* beam)
 {
 	this->beam = beam;
-	this->data = &(beam->data);
 }
 
 DesignBeam::~DesignBeam(){}
@@ -28,7 +27,6 @@ DesignBeam::~DesignBeam(){}
 void DesignBeam::setData(void* data)
 {
 	this->beam = (Beam*)data;
-	this->data = &(this->beam->data);
 }
 
 void DesignBeam::design()
@@ -50,7 +48,7 @@ void DesignBeam::designULS()
 {
 	for(int i = 0; i < beam->forceData.m_FundamentalCombination.size(); i++)
 	{
-		designSection(beam->forceData.m_FundamentalCombination[i].force, beam->m_result[i]);
+		designSection(beam->forceData.m_FundamentalCombination[i], beam->m_result[i]);
 	}
 }
 
@@ -59,55 +57,95 @@ void DesignBeam::designSLS()
 	//[]待添加
 }
 
-void DesignBeam::designSection(const Force& force, Beam::Result& result)
+void DesignBeam::designSection(const ForceData& forceData, Beam::Result& result)
 {
-	designM(force, result);
-	designV(force, result);
+	switch (forceData.combinationType)
+	{
+	case E_CombinationType::E_CT_LOAD:
+		setDesignTypeN(forceData, result);
+		break;
+	case E_CombinationType::E_CT_AD:
+		setDesignTypeAD(forceData, result);
+		break;
+	case E_CombinationType::E_CT_SEISMIC:
+		setDesignTypeE(forceData, result);
+		break;
+	default:
+		std::cerr << forceData.combinationType << "为不支持的弯矩设计组合类型" << std::endl;
+		return;
+		break;
+	}
+	designM(forceData, result);
+	designV(forceData, result);
 }
 
-void DesignBeam::designM(const Force& force, Beam::Result& result)
+void DesignBeam::setDesignTypeN(const ForceData& forceData, Beam::Result& result)
 {
-	double γRE = 1;//[]待改，根据组合类型确定
-	double ξb = additionData.ξb;//[]待改，根据组合类型确定
-	double ρmin = additionData.ρmin;//[]待改，根据组合类型确定
-	switch (beam->data.section->getType())
+	ξb = additionData.ξb;
+	γRE = 1.0;
+	ρmin = additionData.ρmin;
+	ρmax = additionData.ρmax;
+	ρmin_sv = additionData.ρmin_sv;
+}
+
+void DesignBeam::setDesignTypeAD(const ForceData& forceData, Beam::Result& result)
+{
+	ξb = additionData.ξb_AD;
+	γRE = 1.0;
+	ρmin = additionData.ρmin_AD;
+	ρmax = additionData.ρmax_AD;
+	ρmin_sv = additionData.ρmin_sv_AD;
+}
+
+void DesignBeam::setDesignTypeE(const ForceData& forceData, Beam::Result& result)
+{
+	ξb = additionData.ξb_E;
+	γRE = additionData.γRE_M;
+	ρmin = additionData.ρmin_E_LR;//[]根据截面位置塞入不同的数据//[]待改
+	ρmax = additionData.ρmax_E;
+	ρmin_sv = additionData.ρmin_sv_E;
+}
+
+void DesignBeam::designM(const ForceData& forceData, Beam::Result& result)
+{
+	switch (beam->section->getType())
 	{
 	case E_Section::E_S_RECT_SECTION:
-		{//[]非要加{}才不报错吗？初始化操作由“case”标签跳过
-		RectSection* section = (RectSection*)data->section;
+	{//[XXT]有时候报错 “初始化操作由“case”标签跳过” 只能通过给case加{}解决
+		RectSection* section = (RectSection*)beam->section;
 		designM_Rect(//矩形截面配筋设计
-			force.M3,
-			section->get_b(), section->get_h(), data->c,
-			data->concrete->get_fc(), data->longitudinal->get_fy(), data->longitudinal->get_fy_c(),
-			γRE, data->γ0, data->concrete->get_α1(), ξb,
+			forceData.force.M3,
+			section->get_b(), section->get_h(), beam->c,
+			beam->concrete->get_fc(), beam->longitudinal->get_fy(), beam->longitudinal->get_fy_c(),
+			γRE, beam->γ0, beam->concrete->get_α1(), ξb,
 			result.x, result.As, result.As_c, result.ρ, result.ρc);
-			break;
-		}
-	case E_Section::E_S_CIRCLE_SECTION:
-		{
-		CircleSection* section = (CircleSection*)data->section;
 		break;
-		}
+	}
+	case E_Section::E_S_CIRCLE_SECTION:
+	{
+		CircleSection* section = (CircleSection*)beam->section;
+		break;
+	}
 	default:
 		std::cerr << "未知截面！" << std::endl;
 		break;
 	}
 }
 
-void DesignBeam::designV(const Force& force, Beam::Result& result)
+void DesignBeam::designV(const ForceData& forceData, Beam::Result& result)
 {
 	
 }
 
 void DesignBeam::setParameter()
 {
-	double ft_Divide_fy = data->concrete->get_ft() / data->longitudinal->get_fy();
-	double ft_Divide_fyv = data->concrete->get_ft() / data->stirrup->get_fyv();
-	additionData.ξb = data->concrete->get_β1() / (1 + data->longitudinal->get_fy() / (data->longitudinal->get_E() * data->concrete->get_εcu()));
+	double ft_Divide_fy = beam->concrete->get_ft() / beam->longitudinal->get_fy();
+	double ft_Divide_fyv = beam->concrete->get_ft() / beam->stirrup->get_fyv();
+	additionData.ξb = beam->concrete->get_β1() / (1 + beam->longitudinal->get_fy() / (beam->longitudinal->get_E() * beam->concrete->get_εcu()));
 	additionData.ρmin = fmax(0.2, 45 * ft_Divide_fy) / 100; 
 	additionData.ρmax = 0.0275;
 	additionData.ρmin_sv = 0.24 * ft_Divide_fyv;
-	if (data->beamType == E_BeamType::E_BT_TRANSFER_BEAM)
+	if (beam->beamType == E_BeamType::E_BT_TRANSFER_BEAM)
 	{
 		additionData.ρmin = 0.003;
 		additionData.ρmin_sv = 0.9 * ft_Divide_fyv;
@@ -125,11 +163,11 @@ void DesignBeam::setParameterAD()
 
 double DesignBeam::calc_ρmin_AD()
 {//《人防规范》4.11.7
-	if(data->concrete->get_fcuk() < 35 + EPSILON)
+	if(beam->concrete->get_fcuk() < 35 + EPSILON)
 	{
 		return 0.0025;
 	}
-	else if(data->concrete->get_fcuk() < 55 + EPSILON)
+	else if(beam->concrete->get_fcuk() < 55 + EPSILON)
 	{
 		return 0.003;
 	}
@@ -141,13 +179,13 @@ double DesignBeam::calc_ρmin_AD()
 
 double DesignBeam::calc_ρmax_AD()
 {//《人防规范》4.11.8
-	if(data->concrete->get_fcuk() < 25 + EPSILON)
+	if(beam->concrete->get_fcuk() < 25 + EPSILON)
 	{
-		return data->longitudinal->getName() < 335 + EPSILON ? 0.022 : 0.02;
+		return beam->longitudinal->getName() < 335 + EPSILON ? 0.022 : 0.02;
 	}
 	else
 	{
-		return data->longitudinal->getName() < 335 + EPSILON ? 0.025 : 0.024;
+		return beam->longitudinal->getName() < 335 + EPSILON ? 0.025 : 0.024;
 	}
 }
 
@@ -155,15 +193,15 @@ void DesignBeam::setParameterE()
 {
 	additionData.γRE_M = 0.75;
 	additionData.γRE_V = 0.85;
-	double ft_Divide_fy = data->concrete->get_ft() / data->longitudinal->get_fy();
-	double ft_Divide_fyv = data->concrete->get_ft() / data->stirrup->get_fyv();
-	switch (data->beamType)
+	double ft_Divide_fy = beam->concrete->get_ft() / beam->longitudinal->get_fy();
+	double ft_Divide_fyv = beam->concrete->get_ft() / beam->stirrup->get_fyv();
+	switch (beam->beamType)
 	{
 	//转换梁
 	case E_BeamType::E_BT_TRANSFER_BEAM:
-		switch (data->Nfb_gz)
+		switch (beam->Nfb_gz)
 		{
-		case 0:
+		case E_NFB::E_NFB_LV0:
 			additionData.ξb_E = fmin(0.25, additionData.ξb);
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
@@ -173,7 +211,7 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0.5;
 			additionData.minAsRatioContinue = 0.25;
 			break;
-		case 1:
+		case E_NFB::E_NFB_LV1:
 			additionData.ξb_E = fmin(0.25, additionData.ξb);
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
@@ -183,7 +221,7 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0.5;
 			additionData.minAsRatioContinue = 0.25;
 			break;
-		case 2:
+		case E_NFB::E_NFB_LV2:
 			additionData.ξb_E = fmin(0.35, additionData.ξb);
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
@@ -193,11 +231,11 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0.3;
 			additionData.minAsRatioContinue = 0.25;
 			break;
-		case 3:
-		case 4:
+		case E_NFB::E_NFB_LV3:
+		case E_NFB::E_NFB_LV4:
 			std::cerr << "转换梁抗震构造等级至少为二级！" << std::endl;
 			break;
-		case 5:
+		case E_NFB::E_NFB_NULL:
 			additionData.ρmin_E_LR
 				= additionData.ρmin_E_M
 				= additionData.ρmin;
@@ -212,11 +250,11 @@ void DesignBeam::setParameterE()
 		}
 	//其他梁
 	case E_BeamType::E_BT_BEAM:
-		if (data->Nfb != 5 || data->Nfb_gz != 5) std::cerr << "非框架梁包含抗震等级！" << std::endl;
+		if (beam->Nfb != E_NFB::E_NFB_NULL || beam->Nfb_gz != E_NFB::E_NFB_NULL) std::cerr << "非框架梁包含抗震等级！" << std::endl;
 	default:
-		switch (data->Nfb_gz)
+		switch (beam->Nfb_gz)
 		{
-		case 0:
+		case E_NFB::E_NFB_LV0:
 			additionData.ξb_E = fmin(0.25, additionData.ξb);
 			additionData.ρmin_E_LR = fmax(0.4, 80 * ft_Divide_fy) / 100;
 			additionData.ρmin_E_M = fmax(0.3, 65 * ft_Divide_fy) / 100;
@@ -225,7 +263,7 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0.5;
 			additionData.minAsRatioContinue = 0.25;
 			break;
-		case 1:
+		case E_NFB::E_NFB_LV1:
 			additionData.ξb_E = fmin(0.25, additionData.ξb);
 			additionData.ρmin_E_LR = fmax(0.4, 80 * ft_Divide_fy) / 100;
 			additionData.ρmin_E_M = fmax(0.3, 65 * ft_Divide_fy) / 100;
@@ -234,7 +272,7 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0.5;
 			additionData.minAsRatioContinue = 0.25;
 			break;
-		case 2:
+		case E_NFB::E_NFB_LV2:
 			additionData.ξb_E = fmin(0.35, additionData.ξb);
 			additionData.ρmin_E_LR = fmax(0.3, 65 * ft_Divide_fy) / 100;
 			additionData.ρmin_E_M = fmax(0.25, 55 * ft_Divide_fy) / 100;
@@ -243,7 +281,7 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0.3;
 			additionData.minAsRatioContinue = 0.25;
 			break;
-		case 3:
+		case E_NFB::E_NFB_LV3:
 			additionData.ξb_E = fmin(0.35, additionData.ξb);
 			additionData.ρmin_E_LR = fmax(0.25, 55 * ft_Divide_fy) / 100;
 			additionData.ρmin_E_M = fmax(0.2, 45 * ft_Divide_fy) / 100;
@@ -252,7 +290,7 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0.3;
 			additionData.minAsRatioContinue = 0;
 			break;
-		case 4:
+		case E_NFB::E_NFB_LV4:
 			additionData.ξb_E = additionData.ξb;
 			additionData.ρmin_E_LR = fmax(0.25, 55 * ft_Divide_fy) / 100;
 			additionData.ρmin_E_M = fmax(0.2, 45 * ft_Divide_fy) / 100;
@@ -261,7 +299,7 @@ void DesignBeam::setParameterE()
 			additionData.minAs_cRatio_LR = 0;
 			additionData.minAsRatioContinue = 0;
 			break;
-		case 5:
+		case E_NFB::E_NFB_NULL:
 			additionData.ξb_E = additionData.ξb;
 			additionData.ρmin_E_LR 
 				= additionData.ρmin_E_M 

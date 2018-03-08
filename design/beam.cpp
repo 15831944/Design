@@ -6,7 +6,7 @@ Beam::Beam()
 { 
 	setSection(NULL, 20);
 	setMaterial(NULL, NULL, NULL, NULL);
-	setCalculateParameter(0, 5, 5);
+	setCalculateParameter(1, E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
 	setBeamType(E_BeamType::E_BT_BEAM);
 }
 
@@ -14,28 +14,28 @@ Beam::~Beam(){}
 
 void Beam::setSection(Section* section, double c)
 {
-	data.section = section;
-	data.c = c;
+	this->section = section;
+	this->c = c;
 }
 
 void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS, Steel* steel)
 {
-	data.concrete = concrete;
-	data.longitudinal = rebarL;
-	data.stirrup = rebarS;
-	data.skeleton = steel;
+	this->concrete = concrete;
+	this->longitudinal = rebarL;
+	this->stirrup = rebarS;
+	this->skeleton = steel;
 }
 
-void Beam::setCalculateParameter(double ¦Ã0, int Nfb, int Nfb_gz)
+void Beam::setCalculateParameter(double ¦Ã0, E_NFB Nfb, E_NFB Nfb_gz)
 {
-	data.¦Ã0 = ¦Ã0;
-	data.Nfb = Nfb;
-	data.Nfb_gz = Nfb_gz;
+	this->¦Ã0 = ¦Ã0;
+	this->Nfb = Nfb;
+	this->Nfb_gz = Nfb_gz;
 }
 
 void Beam::setBeamType(E_BeamType beamType)
 {
-	data.beamType = beamType;
+	this->beamType = beamType;
 }
 
 void Beam::setForceData

@@ -49,9 +49,16 @@ private:
 		double ρmin_sv_E;
 		double minAs_cRatio_LR;//梁端下铁与上铁的最小比值
 		double minAsRatioContinue;//贯通钢筋与最大配筋的比值
-	} additionData;
+	} additionData;//相当于数据库
+	//一下几行数据为计算的通用数据，根据内力组合的类型取相应值，统一调用designM、designV进行设计
+	double ξb;//砼受压区限值
+	double γRE;
+	double ρmin;//最小配筋率
+	double ρmax;//最大配筋率
+	double ρmin_sv;//最小配箍率
+	//
+
 	Beam* beam;
-	Beam::Data* data;
 //[]这些函数怎么能写成virtual？
 	void prepare();//准备数据
 	void setParameter();//生成非地震组合设计相关参数
@@ -59,9 +66,13 @@ private:
 	void setParameterE();//生成地震组合设计相关参数
 	void designULS();//承载能力极限状态设计
 	void designSLS();//正常使用极限状态设计
-	void designSection(const Force& force, Beam::Result& result);//单一截面设计
-	void designM(const Force& force, Beam::Result& result);//设计纵筋
-	void designV(const Force& force, Beam::Result& result);//设计箍筋
+	void designSection(const ForceData& forceData, Beam::Result& result);//单一截面设计
+	void setDesignTypeN(const ForceData& forceData, Beam::Result& result);//设置非地震组合截面设计参数
+	void setDesignTypeAD(const ForceData& forceData, Beam::Result& result);//设置人防组合截面设计参数
+	void setDesignTypeE(const ForceData& forceData, Beam::Result& result);//设置地震组合截面设计参数
+
+	void designM(const ForceData& forceData, Beam::Result& result);//设计纵筋
+	void designV(const ForceData& forceData, Beam::Result& result);//设计箍筋
 
 	double calc_ρmin_AD();//计算ρmin_AD
 	double calc_ρmax_AD();//计算ρmax_AD
