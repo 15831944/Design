@@ -46,15 +46,15 @@ void Beam::setForce(double N, double V2, double V3, double T, double M2, double 
 }
 
 void Beam::setForceData
-(std::map<std::string, CaseData>* caseMap//[]没想好这个以什么方式传
+(std::map<std::string, CaseData>* caseMap//[]单工况内力看在Beam类里面生成，还是在main里生成传进来
 , std::vector<std::string>* factorFC
 , std::vector<std::string>* factorNC
 , std::vector<std::string>* factorQPC
-){
-	forceData.setCaseMap(caseMap);
-	forceData.setFC(factorFC);
-	forceData.setNC(factorNC);
-	forceData.setQPC(factorQPC);
+){//[]待改
+	//forceData.setCaseMap(caseMap);
+	//forceData.setFC(factorFC);
+	//forceData.setNC(factorNC);
+	//forceData.setQPC(factorQPC);
 
 }
 

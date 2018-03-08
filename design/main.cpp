@@ -33,6 +33,9 @@ void getInfo
 	, std::map<double, Rebar*>& rebarMap
 	, std::map<double, Steel*>& steelMap
 	, std::set<Section*>& sectionSet
+	, std::vector<std::string>& factorFC
+	, std::vector<std::string>& factorNC
+	, std::vector<std::string>& factorQPC
 	);
 
 int main(){
@@ -48,7 +51,7 @@ int main(){
 	prepareInfo(concreteMap, rebarMap, steelMap, factorFC, factorNC, factorQPC);
 	while(true){
 		Beam beam;
-		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet);
+		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet, factorFC, factorNC, factorQPC);
 		DesignBeam designBeam;
 		designBeam.setData(&beam);
 		designBeam.design();
@@ -106,6 +109,9 @@ void getInfo
 , std::map<double, Rebar*>& rebarMap
 , std::map<double, Steel*>& steelMap
 , std::set<Section*>& sectionSet
+, std::vector<std::string>& factorFC
+, std::vector<std::string>& factorNC
+, std::vector<std::string>& factorQPC
 ){
 	beam.setCalculateParameter(1.0, 5, 5);
 	beam.setBeamType((E_BeamType)0);
@@ -116,6 +122,8 @@ void getInfo
 	Rebar* rebarSPt = getMapValueClassPt(rebarMap, 400.0);
 	Steel* steelPt = getMapValueClassPt(steelMap, 235.0);
 	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
+	beam.setForceData(NULL, &factorFC, &factorNC, &factorQPC);//[]这里NULL的位置是单工况表的指针
+
 	beam.setForce(200, 300, 400, 100, 1200, 368);
 	beam.setForce(200, 300, 400, 100, 1200, 314);
 	return;

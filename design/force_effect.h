@@ -128,17 +128,24 @@ public:
 	ForceEffect();
 	~ForceEffect();
 
-	void setCaseMap(std::map<std::string, Force1>* m_caseMap);//设置单工况内力//[]没想好怎么弄
+	void setCaseMap(std::map<std::string, CaseData>* caseMap);//设置单工况内力
 	void setFC(std::vector<std::string>* factorFC);//设置基本组合表
 	void setNC(std::vector<std::string>* factorNC);//设置标准组合表
 	void setQPC(std::vector<std::string>* factorQPC);//设置准永久组合表
+	void calcFC();//计算基本组合
+	void calcNC();//计算标准组合
+	void calcQPC();//计算准永久组合
 //[]一下内容有必要放到private里吗？
-	std::map<std::string, CaseData> m_caseMap;//单工况内力
+	std::map<std::string, CaseData>* m_caseMap;//单工况内力
 	std::vector<std::string>* m_FactorFC;//基本组合系数表
 	std::vector<std::string>* m_FactorNC;//标准组合系数表
 	std::vector<std::string>* m_FactorQPC;//准永久组合系数表
 	std::vector<ForceData> m_FundamentalCombination;//基本组合
 	std::vector<ForceData> m_NominalCombination;//标准组合
 	std::vector<ForceData> m_QuasiPermanentCombination;//准永久组合
+private:
+	void calcCombination//[]这个函数只给cpp用，需要放到类里作为private吗？
+		(std::vector<std::string>* factorTable
+		, std::vector<ForceData>& combinationTable);
 };
 
