@@ -57,18 +57,18 @@ void DesignBeam::designSLS()
 	//[]待添加
 }
 
-void DesignBeam::designSection(const ForceData& forceData, Beam::Result& result)
+void DesignBeam::designSection(const ForceData& forceData, BeamSection::Result& result)
 {
 	switch (forceData.combinationType)
 	{
 	case E_CombinationType::E_CT_LOAD:
-		setDesignTypeN(forceData, result);
+		setDesignTypeN();
 		break;
 	case E_CombinationType::E_CT_AD:
-		setDesignTypeAD(forceData, result);
+		setDesignTypeAD();
 		break;
 	case E_CombinationType::E_CT_SEISMIC:
-		setDesignTypeE(forceData, result);
+		setDesignTypeE();
 		break;
 	default:
 		std::cerr << forceData.combinationType << "为不支持的弯矩设计组合类型" << std::endl;
@@ -79,7 +79,7 @@ void DesignBeam::designSection(const ForceData& forceData, Beam::Result& result)
 	designV(forceData, result);
 }
 
-void DesignBeam::setDesignTypeN(const ForceData& forceData, Beam::Result& result)
+void DesignBeam::setDesignTypeN()
 {
 	ξb = additionData.ξb;
 	γRE = 1.0;
@@ -88,7 +88,7 @@ void DesignBeam::setDesignTypeN(const ForceData& forceData, Beam::Result& result
 	ρmin_sv = additionData.ρmin_sv;
 }
 
-void DesignBeam::setDesignTypeAD(const ForceData& forceData, Beam::Result& result)
+void DesignBeam::setDesignTypeAD()
 {
 	ξb = additionData.ξb_AD;
 	γRE = 1.0;
@@ -97,7 +97,7 @@ void DesignBeam::setDesignTypeAD(const ForceData& forceData, Beam::Result& resul
 	ρmin_sv = additionData.ρmin_sv_AD;
 }
 
-void DesignBeam::setDesignTypeE(const ForceData& forceData, Beam::Result& result)
+void DesignBeam::setDesignTypeE()
 {
 	ξb = additionData.ξb_E;
 	γRE = additionData.γRE_M;
@@ -106,7 +106,7 @@ void DesignBeam::setDesignTypeE(const ForceData& forceData, Beam::Result& result
 	ρmin_sv = additionData.ρmin_sv_E;
 }
 
-void DesignBeam::designM(const ForceData& forceData, Beam::Result& result)
+void DesignBeam::designM(const ForceData& forceData, BeamSection::Result& result)
 {
 	switch (beam->section->getType())
 	{
@@ -132,7 +132,7 @@ void DesignBeam::designM(const ForceData& forceData, Beam::Result& result)
 	}
 }
 
-void DesignBeam::designV(const ForceData& forceData, Beam::Result& result)
+void DesignBeam::designV(const ForceData& forceData, BeamSection::Result& result)
 {
 	
 }

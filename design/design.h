@@ -66,13 +66,13 @@ private:
 	void setParameterE();//生成地震组合设计相关参数
 	void designULS();//承载能力极限状态设计
 	void designSLS();//正常使用极限状态设计
-	void designSection(const ForceData& forceData, Beam::Result& result);//单一截面设计
-	void setDesignTypeN(const ForceData& forceData, Beam::Result& result);//设置非地震组合截面设计参数
-	void setDesignTypeAD(const ForceData& forceData, Beam::Result& result);//设置人防组合截面设计参数
-	void setDesignTypeE(const ForceData& forceData, Beam::Result& result);//设置地震组合截面设计参数
+	void designSection(const ForceData& forceData, BeamSection::Result& result);//单一截面设计
+	void setDesignTypeN();//设置非地震组合截面设计参数
+	void setDesignTypeAD();//设置人防组合截面设计参数
+	void setDesignTypeE();//设置地震组合截面设计参数
 
-	void designM(const ForceData& forceData, Beam::Result& result);//设计纵筋
-	void designV(const ForceData& forceData, Beam::Result& result);//设计箍筋
+	void designM(const ForceData& forceData, BeamSection::Result& result);//设计纵筋
+	void designV(const ForceData& forceData, BeamSection::Result& result);//设计箍筋
 
 	double calc_ρmin_AD();//计算ρmin_AD
 	double calc_ρmax_AD();//计算ρmax_AD

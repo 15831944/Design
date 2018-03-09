@@ -1,21 +1,56 @@
 #include <iostream>
 
-#include "beam.h"
+#include "beam.h"//[]以后改名字
+
+ConcreteElement::ConcreteElement(){}
+
+ConcreteElement::~ConcreteElement(){}
+
+void ConcreteElement::setγ0(double γ0)//[XXT]静态成员函数写实现的时候不加static
+{
+	ConcreteElement::γ0 = γ0;//[]静态成员变量不能用this吧？
+};
+
+void ConcreteElement::setFactorFC(std::vector<std::string>* factorFC)
+{
+	ConcreteElement::m_FactorFC = factorFC;
+}
+
+void ConcreteElement::setFactorNC(std::vector<std::string>* factorNC)
+{
+	ConcreteElement::m_FactorNC = factorNC;
+}
+
+void ConcreteElement::setFactorQPC(std::vector<std::string>* factorQPC)
+{
+	ConcreteElement::m_FactorQPC = factorQPC;
+}
+
+//*------------------------------------*//
 
 Beam::Beam()
-{ 
-	setSection(NULL, 20);
+{
+	this->c = 20;
 	setMaterial(NULL, NULL, NULL, NULL);
-	setCalculateParameter(1, E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
+	setCalculateParameter(E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
 	setBeamType(E_BeamType::E_BT_BEAM);
+	this->sections.resize(SECTION_NUMBER);
 }
 
 Beam::~Beam(){}
 
-void Beam::setSection(Section* section, double c)
+void Beam::setBeamType(E_BeamType beamType)
 {
-	this->section = section;
+	this->beamType = beamType;
+}
+
+void Beam::setSection(const std::vector<Section*>& sections, double c)
+{
 	this->c = c;
+	for(int i = 0; i < sections.size(); i++)
+	{
+		this->sections[i].setSection(sections[i]);
+	}
 }
 
 void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS, Steel* steel)
@@ -26,20 +61,58 @@ void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS, Steel* 
 	this->skeleton = steel;
 }
 
-void Beam::setCalculateParameter(double γ0, E_NFB Nfb, E_NFB Nfb_gz)
+void Beam::setCalculateParameter(E_NFB Nfb, E_NFB Nfb_gz)
 {
-	this->γ0 = γ0;
 	this->Nfb = Nfb;
 	this->Nfb_gz = Nfb_gz;
 }
 
-void Beam::setBeamType(E_BeamType beamType)
+void Beam::setCaseMap(const std::vector<std::map<std::string, CaseData>>& caseMaps)
 {
-	this->beamType = beamType;
+	for (int i = 0; i < sections.size(); i++)
+	{
+		this->sections[i].setForceData(caseMaps[i], this->m_FactorFC, this->m_FactorNC, this->m_FactorQPC);
+	}
 }
 
-void Beam::setForceData
-(std::map<std::string, CaseData>* caseMap
+void Beam::calcForceData()
+{
+	for each (BeamSection curSection in sections)
+	{
+		curSection.calcForceData();
+	}
+}
+
+void Beam::showResult()
+{
+	for each (BeamSection curSection in sections)
+	{
+		curSection.showResult();
+	}
+}
+
+//*------------------------------------*//
+
+BeamSection::BeamSection()
+{
+	setSection(NULL);
+	setSectionType(E_BeamSectionType::E_BST_NULL);//[]将枚举初始化成NULL好吗？
+}
+
+BeamSection::~BeamSection(){}
+
+void BeamSection::setSectionType(E_BeamSectionType sectionType)
+{
+	this->sectionType = sectionType;
+}
+
+void BeamSection::setSection(Section* section)
+{
+	this->section = section;
+}
+
+void BeamSection::setForceData
+(const std::map<std::string, CaseData>& caseMap
 , std::vector<std::string>* factorFC
 , std::vector<std::string>* factorNC
 , std::vector<std::string>* factorQPC
@@ -50,14 +123,14 @@ void Beam::setForceData
 	forceData.setQPC(factorQPC);
 }
 
-void Beam::calcForceData()
+void BeamSection::calcForceData()
 {
 	if (forceData.hasFC()) forceData.calcFC();
 	if (forceData.hasNC()) forceData.calcNC();
 	if (forceData.hasQPC()) forceData.calcQPC();
 }
 
-void Beam::showResult()
+void BeamSection::showResult()
 {
 	for (int i = 0; i < m_result.size(); i++)
 	{
