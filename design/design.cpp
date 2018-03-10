@@ -45,17 +45,17 @@ void DesignBeam::prepare()
 
 void DesignBeam::designULS()
 {
-	for each(BeamSection curBeamSection in beam->sections)
+	for (int i = 0; i < beam->sections.size(); i++)
 	{//遍历梁的所有验算截面
-		int numFC = curBeamSection.forceData.m_FundamentalCombination.size();//当前截面基本组合数
-		curBeamSection.m_resultFC.resize(numFC);
-		for (int i = 0; i < numFC; i++)
+		int numFC = beam->sections[i].forceData.m_FundamentalCombination.size();//当前截面基本组合数
+		beam->sections[i].m_resultFC.resize(numFC);
+		for (int j = 0; j < numFC; j++)
 		{//遍历每个验算截面的所有基本组合
 			designSection
-				(curBeamSection.section
-				, curBeamSection.sectionLocation
-				, curBeamSection.forceData.m_FundamentalCombination[i]
-				, curBeamSection.m_resultFC[i]
+				(beam->sections[i].section
+				, beam->sections[i].sectionLocation
+				, beam->sections[i].forceData.m_FundamentalCombination[j]
+				, beam->sections[i].m_resultFC[j]
 				);
 		}
 	}

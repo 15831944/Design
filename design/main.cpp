@@ -33,6 +33,12 @@ void getInfo
 	, std::map<double, Steel*>& steelMap
 	, std::set<Section*>& sectionSet);
 
+//[静态成员变量声明]
+double ConcreteElement::γ0;
+std::vector<std::string>* ConcreteElement::m_FactorFC;
+std::vector<std::string>* ConcreteElement::m_FactorNC;
+std::vector<std::string>* ConcreteElement::m_FactorQPC;
+
 int main(){
 //	test();
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号

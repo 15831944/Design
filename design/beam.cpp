@@ -81,9 +81,9 @@ void Beam::setCaseMap(const std::vector<std::map<std::string, CaseData>>& caseMa
 
 void Beam::calcForceData()
 {
-	for each (BeamSection curSection in sections)
+	for (int i = 0; i < sections.size(); i++)
 	{
-		curSection.calcForceData();
+		sections[i].calcForceData();
 	}
 }
 
