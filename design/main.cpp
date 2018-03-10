@@ -121,7 +121,7 @@ void getInfo
 	{
 		sections.insert(sections.end(), section);
 	}
-	beam.setSection(sections, 20);
+	beam.setSection(sections, 20, 6000, 3000);
 	Concrete* concretePt = getMapValueClassPt(concreteMap, 30.0);
 	Rebar* rebarLPt = getMapValueClassPt(rebarMap, 400.0);
 	Rebar* rebarSPt = getMapValueClassPt(rebarMap, 400.0);
@@ -161,10 +161,10 @@ void getInfo
 	beam.setBeamType((E_BeamType)beamType);//[]这里非得写个强转，否则编不过？
 
 	std::cout << "宽、高、保护层厚度" << std::endl;
-	double b, h, c;//宽、高、保护层厚度
-	std::cin >> b >> h >> c;
+	double b, h, c, L2, L3;//宽、高、保护层厚度、梁局部坐标轴2、3方向的计算长度
+	std::cin >> b >> h >> c >> L2 >> L3;
 	Section* section = new RectSection(b, h);
-	beam.setSection(section, c);
+	beam.setSection(section, c, L2, L3);
 	
 	std::cout << "砼、纵筋、箍筋、钢骨材料等级" << std::endl;
 	double concreteName, rebarL, rebarS, skeleton;//砼、纵筋、箍筋、钢骨材料

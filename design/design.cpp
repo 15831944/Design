@@ -41,14 +41,23 @@ void DesignBeam::prepare()
 	setParameter();
 	setParameterAD();
 	setParameterE();
-	beam->m_result.resize(beam->forceData.m_FundamentalCombination.size());
 }
 
 void DesignBeam::designULS()
 {
-	for(int i = 0; i < beam->forceData.m_FundamentalCombination.size(); i++)
-	{
-		designSection(beam->forceData.m_FundamentalCombination[i], beam->m_result[i]);
+	for each(BeamSection curBeamSection in beam->sections)
+	{//遍历梁的所有验算截面
+		int numFC = curBeamSection.forceData.m_FundamentalCombination.size();//当前截面基本组合数
+		curBeamSection.m_resultFC.resize(numFC);
+		for (int i = 0; i < numFC; i++)
+		{//遍历每个验算截面的所有基本组合
+			designSection
+				(curBeamSection.section
+				, curBeamSection.sectionLocation
+				, curBeamSection.forceData.m_FundamentalCombination[i]
+				, curBeamSection.m_resultFC[i]
+				);
+		}
 	}
 }
 
@@ -57,29 +66,33 @@ void DesignBeam::designSLS()
 	//[]待添加
 }
 
-void DesignBeam::designSection(const ForceData& forceData, BeamSection::Result& result)
+void DesignBeam::designSection
+(Section* section
+, E_BeamSectionLocation sectionLocation
+, const ForceData& forceData
+, BeamSection::ResultFC& resultFC)
 {
 	switch (forceData.combinationType)
-	{
+	{//根据不同的基本组合类型设置相应的计算参数，采用统一的函数进行计算
 	case E_CombinationType::E_CT_LOAD:
-		setDesignTypeN();
+		setDesignParameterN(sectionLocation);
 		break;
 	case E_CombinationType::E_CT_AD:
-		setDesignTypeAD();
+		setDesignParameterAD(sectionLocation);
 		break;
 	case E_CombinationType::E_CT_SEISMIC:
-		setDesignTypeE();
+		setDesignParameterE(sectionLocation);
 		break;
 	default:
 		std::cerr << forceData.combinationType << "为不支持的弯矩设计组合类型" << std::endl;
 		return;
 		break;
 	}
-	designM(forceData, result);
-	designV(forceData, result);
+	designM(section, forceData, resultFC);
+	designV(section, forceData, resultFC);
 }
 
-void DesignBeam::setDesignTypeN()
+void DesignBeam::setDesignParameterN(E_BeamSectionLocation sectionLocation)
 {
 	ξb = additionData.ξb;
 	γRE = 1.0;
@@ -88,7 +101,7 @@ void DesignBeam::setDesignTypeN()
 	ρmin_sv = additionData.ρmin_sv;
 }
 
-void DesignBeam::setDesignTypeAD()
+void DesignBeam::setDesignParameterAD(E_BeamSectionLocation sectionLocation)
 {
 	ξb = additionData.ξb_AD;
 	γRE = 1.0;
@@ -97,33 +110,44 @@ void DesignBeam::setDesignTypeAD()
 	ρmin_sv = additionData.ρmin_sv_AD;
 }
 
-void DesignBeam::setDesignTypeE()
+void DesignBeam::setDesignParameterE(E_BeamSectionLocation sectionLocation)
 {
 	ξb = additionData.ξb_E;
 	γRE = additionData.γRE_M;
-	ρmin = additionData.ρmin_E_LR;//[]根据截面位置塞入不同的数据//[]待改
+	switch (sectionLocation)
+	{
+	case E_BSL_LR:
+		ρmin = additionData.ρmin_E_LR;
+		break;
+	case E_BSL_M:
+		ρmin = additionData.ρmin_E_M;
+		break;
+	default:
+		std::cerr << sectionLocation << "为错误截面位置类型" << std::endl;
+		break;
+	}
 	ρmax = additionData.ρmax_E;
 	ρmin_sv = additionData.ρmin_sv_E;
 }
 
-void DesignBeam::designM(const ForceData& forceData, BeamSection::Result& result)
+void DesignBeam::designM(Section* section, const ForceData& forceData, BeamSection::ResultFC& resultFC)
 {
-	switch (beam->section->getType())
+	switch (section->getType())
 	{
 	case E_Section::E_S_RECT_SECTION:
 	{//[XXT]有时候报错 “初始化操作由“case”标签跳过” 只能通过给case加{}解决
-		RectSection* section = (RectSection*)beam->section;
+		RectSection* curSection = (RectSection*)section;
 		designM_Rect(//矩形截面配筋设计
 			forceData.force.M3,
-			section->get_b(), section->get_h(), beam->c,
+			curSection->get_b(), curSection->get_h(), beam->c,
 			beam->concrete->get_fc(), beam->longitudinal->get_fy(), beam->longitudinal->get_fy_c(),
 			γRE, beam->γ0, beam->concrete->get_α1(), ξb,
-			result.x, result.As, result.As_c, result.ρ, result.ρc);
+			resultFC.x, resultFC.As, resultFC.As_c, resultFC.ρ, resultFC.ρc);
 		break;
 	}
 	case E_Section::E_S_CIRCLE_SECTION:
 	{
-		CircleSection* section = (CircleSection*)beam->section;
+		CircleSection* curSection = (CircleSection*)section;
 		break;
 	}
 	default:
@@ -132,7 +156,7 @@ void DesignBeam::designM(const ForceData& forceData, BeamSection::Result& result
 	}
 }
 
-void DesignBeam::designV(const ForceData& forceData, BeamSection::Result& result)
+void DesignBeam::designV(Section* section, const ForceData& forceData, BeamSection::ResultFC& resultFC)
 {
 	
 }
