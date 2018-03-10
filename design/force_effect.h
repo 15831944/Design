@@ -154,7 +154,7 @@ public:
 	ForceEffect();
 	~ForceEffect();
 
-	void setCaseMap(std::map<std::string, CaseData>* caseMap);//设置单工况内力
+	void setCaseMap(const std::map<std::string, CaseData>& caseMap);//设置单工况内力
 	void setFC(std::vector<std::string>* factorFC);//设置基本组合表
 	void setNC(std::vector<std::string>* factorNC);//设置标准组合表
 	void setQPC(std::vector<std::string>* factorQPC);//设置准永久组合表
@@ -165,14 +165,15 @@ public:
 	void calcNC();//计算标准组合
 	void calcQPC();//计算准永久组合
 //[]一下内容有必要放到private里吗？
-	std::map<std::string, CaseData>* m_caseMap;//单工况内力
-	std::vector<std::string>* m_FactorFC;//基本组合系数表
-	std::vector<std::string>* m_FactorNC;//标准组合系数表
-	std::vector<std::string>* m_FactorQPC;//准永久组合系数表
+	std::map<std::string, CaseData> m_caseMap;//单工况内力
 	std::vector<ForceData> m_FundamentalCombination;//基本组合
 	std::vector<ForceData> m_NominalCombination;//标准组合
 	std::vector<ForceData> m_QuasiPermanentCombination;//准永久组合
 
+private:
+	std::vector<std::string>* m_FactorFC;//基本组合系数表
+	std::vector<std::string>* m_FactorNC;//标准组合系数表
+	std::vector<std::string>* m_FactorQPC;//准永久组合系数表
 
 private://仅内部使用的次要子函数
 	void calcCombination//根据荷载组合系数表、单工况内力生成对应的荷载组合

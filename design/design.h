@@ -56,23 +56,28 @@ private:
 	double ρmin;//最小配筋率
 	double ρmax;//最大配筋率
 	double ρmin_sv;//最小配箍率
-	//
-
+	//待设计的构件
 	Beam* beam;
+
 //[]这些函数怎么能写成virtual？
 	void prepare();//准备数据
 	void setParameter();//生成非地震组合设计相关参数
 	void setParameterAD();//生成人防组合设计相关参数
 	void setParameterE();//生成地震组合设计相关参数
+
 	void designULS();//承载能力极限状态设计
 	void designSLS();//正常使用极限状态设计
-	void designSection(const ForceData& forceData, Beam::Result& result);//单一截面设计
-	void setDesignTypeN(const ForceData& forceData, Beam::Result& result);//设置非地震组合截面设计参数
-	void setDesignTypeAD(const ForceData& forceData, Beam::Result& result);//设置人防组合截面设计参数
-	void setDesignTypeE(const ForceData& forceData, Beam::Result& result);//设置地震组合截面设计参数
+	void designSection
+		(Section* section
+		, E_BeamSectionLocation sectionType
+		, const ForceData& forceData
+		, BeamSection::ResultFC& resultFC);//单一截面设计
+	void setDesignParameterN(E_BeamSectionLocation sectionType);//设置非地震组合截面设计参数
+	void setDesignParameterAD(E_BeamSectionLocation sectionType);//设置人防组合截面设计参数
+	void setDesignParameterE(E_BeamSectionLocation sectionType);//设置地震组合截面设计参数
 
-	void designM(const ForceData& forceData, Beam::Result& result);//设计纵筋
-	void designV(const ForceData& forceData, Beam::Result& result);//设计箍筋
+	void designM(Section* section, const ForceData& forceData, BeamSection::ResultFC& resultFC);//设计纵筋
+	void designV(Section* section, const ForceData& forceData, BeamSection::ResultFC& resultFC);//设计箍筋
 
 	double calc_ρmin_AD();//计算ρmin_AD
 	double calc_ρmax_AD();//计算ρmax_AD

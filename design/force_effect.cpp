@@ -5,18 +5,14 @@
 
 ForceEffect::ForceEffect()
 {
-	m_caseMap = NULL;
 	m_FactorFC = NULL;
 	m_FactorNC = NULL;
 	m_FactorQPC = NULL;
 }
 
-ForceEffect::~ForceEffect()
-{
-	delete m_caseMap;
-}
+ForceEffect::~ForceEffect(){}
 
-void ForceEffect::setCaseMap(std::map<std::string, CaseData>* caseMap)
+void ForceEffect::setCaseMap(const std::map<std::string, CaseData>& caseMap)
 {
 	this->m_caseMap = caseMap;
 }
@@ -75,9 +71,9 @@ ForceData ForceEffect::calcCombineForce(const std::string line, int stage)//[]需
 		double factor = 0;
 		std::string caseName;
 		ss >> factor >> caseName;//[]stringstream对于字母e也识别为了数字
-		if (m_caseMap->count(caseName) == 1)
+		if (m_caseMap.count(caseName) == 1)
 		{
-			CaseData curCaseData = m_caseMap->at(caseName);
+			CaseData curCaseData = m_caseMap.at(caseName);
 			if (maxSingleCaseType < curCaseData.caseType) maxSingleCaseType = curCaseData.caseType;
 			result.force = result.force + curCaseData.force * factor;
 		}

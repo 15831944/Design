@@ -1,21 +1,60 @@
 #include <iostream>
 
-#include "beam.h"
+#include "beam.h"//[]以后改名字
+
+ConcreteElement::ConcreteElement(){}
+
+ConcreteElement::~ConcreteElement(){}
+
+void ConcreteElement::setγ0(double γ0)//[XXT]静态成员函数写实现的时候不加static
+{
+	ConcreteElement::γ0 = γ0;//[]静态成员变量不能用this吧？
+}
+
+void ConcreteElement::setFactorFC(std::vector<std::string>* factorFC)
+{
+	ConcreteElement::m_FactorFC = factorFC;
+}
+
+void ConcreteElement::setFactorNC(std::vector<std::string>* factorNC)
+{
+	ConcreteElement::m_FactorNC = factorNC;
+}
+
+void ConcreteElement::setFactorQPC(std::vector<std::string>* factorQPC)
+{
+	ConcreteElement::m_FactorQPC = factorQPC;
+}
+
+//*------------------------------------*//
 
 Beam::Beam()
-{ 
-	setSection(NULL, 20);
+{
+	this->c = 999;
+	this->Lc2 = 0;
+	this->Lc3 = 0;
 	setMaterial(NULL, NULL, NULL, NULL);
-	setCalculateParameter(1, E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
+	setCalculateParameter(E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
 	setBeamType(E_BeamType::E_BT_BEAM);
+	this->sections.resize(SECTION_NUMBER);
 }
 
 Beam::~Beam(){}
 
-void Beam::setSection(Section* section, double c)
+void Beam::setBeamType(E_BeamType beamType)
 {
-	this->section = section;
+	this->beamType = beamType;
+}
+
+void Beam::setSection(const std::vector<Section*>& sections, double c, double Lc2, double Lc3)
+{
 	this->c = c;
+	this->Lc2 = Lc2;
+	this->Lc3 = Lc3;
+	for(int i = 0; i < sections.size(); i++)
+	{
+		this->sections[i].setSection(sections[i]);
+	}
 }
 
 void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS, Steel* steel)
@@ -26,20 +65,59 @@ void Beam::setMaterial(Concrete* concrete, Rebar* rebarL, Rebar* rebarS, Steel* 
 	this->skeleton = steel;
 }
 
-void Beam::setCalculateParameter(double γ0, E_NFB Nfb, E_NFB Nfb_gz)
+void Beam::setCalculateParameter(E_NFB Nfb, E_NFB Nfb_gz)
 {
-	this->γ0 = γ0;
 	this->Nfb = Nfb;
 	this->Nfb_gz = Nfb_gz;
 }
 
-void Beam::setBeamType(E_BeamType beamType)
+void Beam::setCaseMap(const std::vector<std::map<std::string, CaseData>>& caseMaps)
 {
-	this->beamType = beamType;
+	for (int i = 0; i < sections.size(); i++)
+	{
+		this->sections[i].setForceData(caseMaps[i], this->m_FactorFC, this->m_FactorNC, this->m_FactorQPC);
+	}
 }
 
-void Beam::setForceData
-(std::map<std::string, CaseData>* caseMap
+void Beam::calcForceData()
+{
+	for (int i = 0; i < sections.size(); i++)
+	{
+		sections[i].calcForceData();
+	}
+}
+
+void Beam::showResult()
+{
+	for (int i = 0; i < sections.size(); i++)
+	{
+		std::cout << "第" << i << "号截面设计结果：" << std::endl;
+		sections[i].showResult();
+	}
+}
+
+//*------------------------------------*//
+
+BeamSection::BeamSection()
+{
+	//setSection(NULL);
+	//setSectionLocationType(E_BeamSectionLocation::E_BSL_NULL);//[]能将枚举初始化成NULL吗？
+}
+
+BeamSection::~BeamSection(){}
+
+void BeamSection::setSection(Section* section)
+{
+	this->section = section;
+}
+
+void BeamSection::setSectionLocationType(E_BeamSectionLocation sectionLocation)
+{
+	this->sectionLocation = sectionLocation;
+}
+
+void BeamSection::setForceData
+(const std::map<std::string, CaseData>& caseMap
 , std::vector<std::string>* factorFC
 , std::vector<std::string>* factorNC
 , std::vector<std::string>* factorQPC
@@ -50,24 +128,24 @@ void Beam::setForceData
 	forceData.setQPC(factorQPC);
 }
 
-void Beam::calcForceData()
+void BeamSection::calcForceData()
 {
 	if (forceData.hasFC()) forceData.calcFC();
 	if (forceData.hasNC()) forceData.calcNC();
 	if (forceData.hasQPC()) forceData.calcQPC();
 }
 
-void Beam::showResult()
+void BeamSection::showResult()
 {
-	for (int i = 0; i < m_result.size(); i++)
+	for (int i = 0; i < m_resultFC.size(); i++)
 	{
 		std::cout << "第" << i << "号组合结果:" << std::endl;
 		std::cout << "正截面" << std::endl;
-		std::cout << "x=" << m_result[i].x << std::endl;
-		std::cout << "As=" << m_result[i].As << "  ρ=" << m_result[i].ρ << std::endl;
-		std::cout << "As'=" << m_result[i].As_c << "  ρ'=" << m_result[i].ρc << std::endl;
+		std::cout << "x=" << m_resultFC[i].x << std::endl;
+		std::cout << "As=" << m_resultFC[i].As << "  ρ=" << m_resultFC[i].ρ << std::endl;
+		std::cout << "As'=" << m_resultFC[i].As_c << "  ρ'=" << m_resultFC[i].ρc << std::endl;
 		std::cout << "斜截面" << std::endl;
-		std::cout << "Asv=" << m_result[i].Asv << "  ρsv=" << m_result[i].ρsv << std::endl;
+		std::cout << "Asv=" << m_resultFC[i].Asv << "  ρsv=" << m_resultFC[i].ρsv << std::endl;
 		std::cout << std::endl;
 	}
 }

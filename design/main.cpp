@@ -24,27 +24,22 @@ void prepareInfo
 	, std::map<double, Steel*>& steelMap
 	, std::vector<std::string>& factorFC
 	, std::vector<std::string>& factorNC
-	, std::vector<std::string>& factorQPC
-	);
+	, std::vector<std::string>& factorQPC);
 ///获取梁信息
 void getInfo
 	(Beam& beam
 	, std::map<double, Concrete*>& concreteMap
 	, std::map<double, Rebar*>& rebarMap
 	, std::map<double, Steel*>& steelMap
-	, std::set<Section*>& sectionSet
-	, std::vector<std::string>& factorFC
-	, std::vector<std::string>& factorNC
-	, std::vector<std::string>& factorQPC
-	);
+	, std::set<Section*>& sectionSet);
+
+//[静态成员变量声明]
+double ConcreteElement::γ0;
+std::vector<std::string>* ConcreteElement::m_FactorFC;
+std::vector<std::string>* ConcreteElement::m_FactorNC;
+std::vector<std::string>* ConcreteElement::m_FactorQPC;
 
 int main(){
-	//[]stringstream对于字母e也识别为了数字，怎么处理？
-	std::stringstream ss;
-	ss << "1.2E 1.4e 1.41";
-	double a, b, c;
-	ss >> a >> b >> c;
-
 //	test();
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	std::map<double, Concrete*> concreteMap;//砼材料表
@@ -55,9 +50,15 @@ int main(){
 	std::vector<std::string> factorQPC;//准永久组合系数表
 
 	prepareInfo(concreteMap, rebarMap, steelMap, factorFC, factorNC, factorQPC);
+	ConcreteElement::setγ0(1.0);//[]待交给用户修改
+	ConcreteElement::setFactorFC(&factorFC);
+	ConcreteElement::setFactorNC(&factorNC);
+	ConcreteElement::setFactorQPC(&factorQPC);
+
+
 	while(true){
 		Beam beam;
-		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet, factorFC, factorNC, factorQPC);
+		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet);
 		beam.calcForceData();
 		DesignBeam designBeam;
 		designBeam.setData(&beam);
@@ -75,8 +76,8 @@ void prepareInfo
 , std::map<double, Steel*>& steelMap
 , std::vector<std::string>& factorFC
 , std::vector<std::string>& factorNC
-, std::vector<std::string>& factorQPC
-){
+, std::vector<std::string>& factorQPC)
+{
 	//初始化砼材料
 	for (int i = 15; i <= 80; i += 5)
 	{
@@ -117,32 +118,39 @@ void getInfo
 , std::map<double, Rebar*>& rebarMap
 , std::map<double, Steel*>& steelMap
 , std::set<Section*>& sectionSet
-, std::vector<std::string>& factorFC
-, std::vector<std::string>& factorNC
-, std::vector<std::string>& factorQPC
 ){
-	beam.setCalculateParameter(1.0, E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
+	beam.setCalculateParameter(E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
 	beam.setBeamType((E_BeamType)0);
 	Section* section = new RectSection(300, 700);
-	beam.setSection(section, 20);
+	std::vector<Section*> sections;
+	for (int i = 0; i < 9; i++)
+	{
+		sections.insert(sections.end(), section);
+	}
+	beam.setSection(sections, 20, 6000, 3000);
 	Concrete* concretePt = getMapValueClassPt(concreteMap, 30.0);
 	Rebar* rebarLPt = getMapValueClassPt(rebarMap, 400.0);
 	Rebar* rebarSPt = getMapValueClassPt(rebarMap, 400.0);
 	Steel* steelPt = getMapValueClassPt(steelMap, 235.0);
 	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
 
-	//此阶段输入单工况内力，其中CaseData由 内力、标识符 组成，目前单工况map放在heap中传指针，我没想出更好的办法
-	std::map<std::string, CaseData>* caseMap = new std::map<std::string, CaseData>();//单工况内力放在heap中传入指针给Beam，在Beam中析构
-	CaseData curCaseData = CaseData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_DEAD);;
-	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("D", curCaseData));
-	curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_LIVE);
-	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("L", curCaseData));
-	curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_AD);
-	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("AD", curCaseData));
-	curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_E);
-	caseMap->insert(caseMap->end(), std::pair<std::string, CaseData>("E", curCaseData));
+	//此阶段输入梁各截面单工况内力，Beam->BeamSection->ForceEffect中的m_caseMap将放一个完整的拷贝
+	std::vector<std::map<std::string, CaseData>> caseMaps(9);
 
-	beam.setForceData(caseMap, &factorFC, &factorNC, &factorQPC);
+	for (int i = 0; i < 9; i++){
+		std::map<std::string, CaseData> caseMap;
+		CaseData curCaseData = CaseData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_DEAD);;
+		caseMap.insert(caseMap.end(), std::pair<std::string, CaseData>("D", curCaseData));
+		curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_LIVE);
+		caseMap.insert(caseMap.end(), std::pair<std::string, CaseData>("L", curCaseData));
+		curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_AD);
+		caseMap.insert(caseMap.end(), std::pair<std::string, CaseData>("AD", curCaseData));
+		curCaseData.setData(Force(100, 200, 200, 200, 500, 600), E_SingleCaseType::E_SCT_E);
+		caseMap.insert(caseMap.end(), std::pair<std::string, CaseData>("E", curCaseData));
+		caseMaps[i] = caseMap;
+	}
+
+	beam.setCaseMap(caseMaps);
 	return;
 	/*-----以上为临时测试内容-----*/
 
@@ -159,10 +167,10 @@ void getInfo
 	beam.setBeamType((E_BeamType)beamType);//[]这里非得写个强转，否则编不过？
 
 	std::cout << "宽、高、保护层厚度" << std::endl;
-	double b, h, c;//宽、高、保护层厚度
-	std::cin >> b >> h >> c;
+	double b, h, c, L2, L3;//宽、高、保护层厚度、梁局部坐标轴2、3方向的计算长度
+	std::cin >> b >> h >> c >> L2 >> L3;
 	Section* section = new RectSection(b, h);
-	beam.setSection(section, c);
+	beam.setSection(section, c, L2, L3);
 	
 	std::cout << "砼、纵筋、箍筋、钢骨材料等级" << std::endl;
 	double concreteName, rebarL, rebarS, skeleton;//砼、纵筋、箍筋、钢骨材料
