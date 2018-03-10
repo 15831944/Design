@@ -55,8 +55,7 @@ void DesignBeam::designULS()
 				(beam->sections[i].section
 				, beam->sections[i].sectionLocation
 				, beam->sections[i].forceData.m_FundamentalCombination[j]
-				, beam->sections[i].m_resultFC[j]
-				);
+				, beam->sections[i].m_resultFC[j]);
 		}
 	}
 }
