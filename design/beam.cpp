@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 
 #include "beam.h"//[]以后改名字
 
@@ -11,19 +12,185 @@ void ConcreteElement::setγ0(double γ0)//[XXT]静态成员函数写实现的时候不加stati
 	ConcreteElement::γ0 = γ0;//[]静态成员变量不能用this吧？
 }
 
-void ConcreteElement::setFactorFC(std::vector<std::string>* factorFC)
+void ConcreteElement::setCaspMap(std::map<std::string, E_SingleCaseType>* caseMap)
 {
-	ConcreteElement::m_FactorFC = factorFC;
+	ConcreteElement::m_caseMap = caseMap;
 }
 
-void ConcreteElement::setFactorNC(std::vector<std::string>* factorNC)
+void ConcreteElement::setFactorFC_Str(std::vector<std::string>* factorFC)
 {
-	ConcreteElement::m_FactorNC = factorNC;
+	ConcreteElement::m_FactorFC_Str = factorFC;
+	parserFactorFC();
 }
 
-void ConcreteElement::setFactorQPC(std::vector<std::string>* factorQPC)
+void ConcreteElement::setFactorNC_Str(std::vector<std::string>* factorNC)
 {
-	ConcreteElement::m_FactorQPC = factorQPC;
+	ConcreteElement::m_FactorNC_Str = factorNC;
+	parserFactorNC();
+}
+
+void ConcreteElement::setFactorQPC_Str(std::vector<std::string>* factorQPC)
+{
+	ConcreteElement::m_FactorQPC_Str = factorQPC;
+	parserFactorQPC();
+}
+
+void ConcreteElement::parserFactorFC()
+{
+	parserCombination(m_FactorFC_Str, m_caseMap, m_FactorFC, E_CombinationType::E_CT_FC);
+}
+
+void ConcreteElement::parserFactorNC()
+{
+	parserCombination(m_FactorNC_Str, m_caseMap, m_FactorNC, E_CombinationType::E_CT_NC);
+}
+
+void ConcreteElement::parserFactorQPC()
+{
+	parserCombination(m_FactorQPC_Str, m_caseMap, m_FactorQPC, E_CombinationType::E_CT_QPC);
+}
+
+void ConcreteElement::printAllFactorTables()
+{
+	std::cout << "基本组合" << std::endl;
+	printFactorTable(m_FactorFC);
+	std::cout << "标准组合" << std::endl;
+	printFactorTable(m_FactorNC);
+	std::cout << "准永久组合" << std::endl;
+	printFactorTable(m_FactorQPC);
+}
+
+void ConcreteElement::printFactorTable(const std::vector<CombineData>& factorTable)
+{
+	for each(CombineData curCombineData in factorTable)
+	{
+		for each(std::pair<double, std::string> curCombinePair in curCombineData.combinePairData)
+		{
+			std::cout << curCombinePair.first << "(" << curCombinePair.second << ")" << " + ";
+		}
+		switch (curCombineData.combineType)
+		{
+		case E_CombinationType::E_CT_FC:
+			std::cout << "基本组合";
+			break;
+		case E_CombinationType::E_CT_LOAD:
+			std::cout << "非地震组合";
+			break;
+		case E_CombinationType::E_CT_SEISMIC:
+			std::cout << "地震组合";
+			break;
+		case E_CombinationType::E_CT_AD:
+			std::cout << "人防组合";
+			break;
+		case E_CombinationType::E_CT_NC:
+			std::cout << "标准组合";
+			break;
+		case E_CombinationType::E_CT_QPC:
+			std::cout << "准永久组合";
+			break;
+		default:
+			std::cout << "未识别出组合！";
+			break;
+		}
+		std::cout << std::endl;
+	}
+}
+
+void ConcreteElement::parserCombination//根据 荷载组合系数表(string形式)、单工况类型表 生成对应的荷载组合系数表(解析后)
+(std::vector<std::string>* factorTable_Str
+, std::map<std::string, E_SingleCaseType>*& caseMap
+, std::vector<CombineData>& factorTable
+, E_CombinationType combineType)
+{
+	for each(std::string line in *factorTable_Str)
+	{
+		parserCombinationExp(line, factorTable, combineType);
+	}
+}
+
+void ConcreteElement::parserCombinationExp//解析荷载组合表达式
+(const std::string& line
+, std::vector<CombineData>& factorTable
+, E_CombinationType combineType)
+{
+	std::vector<std::pair<double, std::string>> casePairData;//vector(单工况系数，单工况名称)
+	E_SingleCaseType maxSingleCaseType = E_SingleCaseType::E_SCT_DEAD;//根据最大单工况类型判断荷载组合类型
+
+	std::string caseName;//单工况名称
+	double factor = 0;//单工况组合系数
+	int indexStart = line.size() - 1;//抽取字符串起始位置
+	int indexEnd = line.size() - 1;//抽取字符串结束位置
+	bool gettingCaseName = true;//表示是否正在提取caseName
+	bool gettingFactor = false;//表示是否正在提取factor
+	//对line倒着进行解析
+	for (int i = line.size() - 1; i >= 0; i--)
+	{
+		if (gettingCaseName && isdigit(line[i]))
+		{//找到caseName起始位置
+			gettingCaseName = false;
+			gettingFactor = true;
+			indexStart = i + 1;//更新caseName的startIndex
+			caseName = line.substr(indexStart, indexEnd - indexStart + 1);
+			caseName.erase(0, caseName.find_first_not_of(" "));//删除头部空格
+			caseName.erase(caseName.find_last_not_of(" ") + 1);//删除尾部空格
+			indexEnd = i;//准备提取factor
+		}
+		
+		if (gettingFactor && (line[i] == '+' || line[i] == '-' || i == 0))
+		{//找到factor起始位置			
+			gettingCaseName = true;
+			gettingFactor = false;
+			indexStart = (i == 0) ? i : i + 1;//更新factor的startIndex
+			std::string factorStr = line.substr(indexStart, indexEnd - indexStart + 1);
+			factorStr.erase(0, factorStr.find_first_not_of(" "));//删除头部空格
+			factorStr.erase(factorStr.find_last_not_of(" ") + 1);//删除尾部空格
+			factor = std::stod(factorStr);
+			if (line[i] == '-') factor = -factor;//判断是否系数为负数
+			indexEnd = i -1;
+			//将casePair写入casePairData中
+			if (m_caseMap->count(caseName) == 1)
+			{
+				casePairData.insert(casePairData.begin(), std::pair<double, std::string>(factor, caseName));
+				if (maxSingleCaseType < m_caseMap->at(caseName)) maxSingleCaseType = m_caseMap->at(caseName);
+			}
+			factor = 0;
+		}
+	}
+
+	E_CombinationType curCombinationType = getCombinationType(combineType, maxSingleCaseType);
+	factorTable.insert(factorTable.end(), CombineData(curCombinationType, casePairData));
+}
+
+E_CombinationType ConcreteElement::getCombinationType
+(E_CombinationType combineType
+, E_SingleCaseType maxSingleCaseType)
+{
+	switch (combineType)
+	{
+	case E_CombinationType::E_CT_FC:
+		switch (maxSingleCaseType)
+		{
+		case E_SingleCaseType::E_SCT_AD:
+			return E_CombinationType::E_CT_AD;
+			break;
+		case E_SingleCaseType::E_SCT_E:
+			return E_CombinationType::E_CT_SEISMIC;
+			break;
+		default:
+			return E_CombinationType::E_CT_LOAD;
+			break;
+		}
+		break;
+	case E_CombinationType::E_CT_NC:
+		return E_CombinationType::E_CT_NC;
+		break;
+	case E_CombinationType::E_CT_QPC:
+		return E_CombinationType::E_CT_QPC;
+		break;
+	default:
+		std::cerr << "未知组合类型！" << std::endl;
+		break;
+	}
 }
 
 //*------------------------------------*//
@@ -75,7 +242,7 @@ void Beam::setCaseMap(const std::vector<std::map<std::string, CaseData>>& caseMa
 {
 	for (int i = 0; i < sections.size(); i++)
 	{
-		this->sections[i].setForceData(caseMaps[i], this->m_FactorFC, this->m_FactorNC, this->m_FactorQPC);
+		this->sections[i].setForceData(caseMaps[i], &this->m_FactorFC, &this->m_FactorNC, &this->m_FactorQPC);
 	}
 }
 
@@ -118,9 +285,9 @@ void BeamSection::setSectionLocationType(E_BeamSectionLocation sectionLocation)
 
 void BeamSection::setForceData
 (const std::map<std::string, CaseData>& caseMap
-, std::vector<std::string>* factorFC
-, std::vector<std::string>* factorNC
-, std::vector<std::string>* factorQPC
+, std::vector<CombineData>* factorFC
+, std::vector<CombineData>* factorNC
+, std::vector<CombineData>* factorQPC
 ){
 	forceData.setCaseMap(caseMap);
 	forceData.setFC(factorFC);

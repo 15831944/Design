@@ -115,6 +115,7 @@ struct CaseData
 {
 	Force force;//内力
 	E_SingleCaseType caseType;//组合类型
+
 	CaseData(Force f, E_SingleCaseType cT)
 		:force(f), caseType(cT)
 	{}
@@ -133,8 +134,9 @@ enum E_CombinationType
 	E_CT_LOAD,//非地震组合
 	E_CT_SEISMIC,//地震组合
 	E_CT_AD,//人防组合
-	E_CT_NOMINAL,//标准组合
-	E_CT_QP//准永久组合
+	E_CT_FC,//基本组合
+	E_CT_NC,//标准组合
+	E_CT_QPC//准永久组合
 };
 
 struct ForceData
@@ -148,6 +150,17 @@ struct ForceData
 
 //*------------------------------------*//
 
+struct CombineData
+{
+	typedef std::vector<std::pair<double, std::string>> TD_CombinePair;
+	E_CombinationType combineType;//组合类型
+	TD_CombinePair combinePairData;//(系数，单工况名称)的数组
+	CombineData(){ combineType = E_CombinationType::E_CT_CASE; }
+	CombineData(E_CombinationType cT, TD_CombinePair cD)
+		:combineType(cT), combinePairData(cD)
+	{}
+};
+
 class ForceEffect
 {
 public:
@@ -155,9 +168,9 @@ public:
 	~ForceEffect();
 
 	void setCaseMap(const std::map<std::string, CaseData>& caseMap);//设置单工况内力
-	void setFC(std::vector<std::string>* factorFC);//设置基本组合表
-	void setNC(std::vector<std::string>* factorNC);//设置标准组合表
-	void setQPC(std::vector<std::string>* factorQPC);//设置准永久组合表
+	void setFC(std::vector<CombineData>* factorFC);//设置基本组合表
+	void setNC(std::vector<CombineData>* factorNC);//设置标准组合表
+	void setQPC(std::vector<CombineData>* factorQPC);//设置准永久组合表
 	bool hasFC(){ return m_FactorFC != NULL; }//检测是否包含FC
 	bool hasNC(){ return m_FactorNC != NULL; }//检测是否包含NC
 	bool hasQPC(){ return m_FactorQPC != NULL; }//检测是否包含QPC
@@ -171,18 +184,15 @@ public:
 	std::vector<ForceData> m_QuasiPermanentCombination;//准永久组合
 
 private:
-	std::vector<std::string>* m_FactorFC;//基本组合系数表
-	std::vector<std::string>* m_FactorNC;//标准组合系数表
-	std::vector<std::string>* m_FactorQPC;//准永久组合系数表
+	std::vector<CombineData>* m_FactorFC;//基本组合系数表(解析后)
+	std::vector<CombineData>* m_FactorNC;//标准组合系数表(解析后)
+	std::vector<CombineData>* m_FactorQPC;//准永久组合系数表(解析后)
 
 private://仅内部使用的次要子函数
-	void calcCombination//根据荷载组合系数表、单工况内力生成对应的荷载组合
-		(std::vector<std::string>* factorTable
-		, std::vector<ForceData>& combinationTable
-		, int stage);//0 - 基本组合, 1 - 标准组合, 2 - 准永久组合
-	ForceData calcCombineForce(const std::string line, int stage);//根据具体的内力组合表达式、单工况内力生成组合后内力结果,0-基本组合,1-标准组合,2-准永久组合
-	void analyseCombination//将内力组合表达式拆解成带系数的字段，如1.2D、1.4L
-		(const std::string& line
-		, std::vector<std::string>& combination);
+	void calcCombination//根据 荷载组合系数表(解析后)、单工况内力 生成对应的荷载组合
+		(const std::vector<CombineData>* factorTable
+		, std::vector<ForceData>& combinationTable);
+	
+	Force calcCombineForce(const CombineData& curCombineData);//根据组合系数表、caseMap生成对应的组合结果表
 };
 

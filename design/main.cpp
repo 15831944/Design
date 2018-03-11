@@ -22,6 +22,7 @@ void prepareInfo
 	(std::map<double, Concrete*>& concreteMap
 	, std::map<double, Rebar*>& rebarMap
 	, std::map<double, Steel*>& steelMap
+	, std::map<std::string, E_SingleCaseType>& caseMap
 	, std::vector<std::string>& factorFC
 	, std::vector<std::string>& factorNC
 	, std::vector<std::string>& factorQPC);
@@ -35,26 +36,36 @@ void getInfo
 
 //[静态成员变量声明]
 double ConcreteElement::γ0;
-std::vector<std::string>* ConcreteElement::m_FactorFC;
-std::vector<std::string>* ConcreteElement::m_FactorNC;
-std::vector<std::string>* ConcreteElement::m_FactorQPC;
+std::map<std::string, E_SingleCaseType>* ConcreteElement::m_caseMap;
+std::vector<std::string>* ConcreteElement::m_FactorFC_Str;
+std::vector<std::string>* ConcreteElement::m_FactorNC_Str;
+std::vector<std::string>* ConcreteElement::m_FactorQPC_Str;
+std::vector<CombineData> ConcreteElement::m_FactorFC;
+std::vector<CombineData> ConcreteElement::m_FactorNC;
+std::vector<CombineData> ConcreteElement::m_FactorQPC;
 
 int main(){
 //	test();
+	//截面
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
+	//材料
 	std::map<double, Concrete*> concreteMap;//砼材料表
 	std::map<double, Rebar*> rebarMap;//钢筋材料表
 	std::map<double, Steel*> steelMap;//钢材表
+	//荷载
+	std::map<std::string, E_SingleCaseType> caseMap;//单工况类型表
 	std::vector<std::string> factorFC;//基本组合系数表
 	std::vector<std::string> factorNC;//标准组合系数表
 	std::vector<std::string> factorQPC;//准永久组合系数表
 
-	prepareInfo(concreteMap, rebarMap, steelMap, factorFC, factorNC, factorQPC);
+	prepareInfo(concreteMap, rebarMap, steelMap, caseMap, factorFC, factorNC, factorQPC);
 	ConcreteElement::setγ0(1.0);//[]待交给用户修改
-	ConcreteElement::setFactorFC(&factorFC);
-	ConcreteElement::setFactorNC(&factorNC);
-	ConcreteElement::setFactorQPC(&factorQPC);
-
+	ConcreteElement::setCaspMap(&caseMap);
+	ConcreteElement::setFactorFC_Str(&factorFC);
+	ConcreteElement::setFactorNC_Str(&factorNC);
+	ConcreteElement::setFactorQPC_Str(&factorQPC);
+	ConcreteElement::printAllFactorTables();
+	system("pause");
 
 	while(true){
 		Beam beam;
@@ -74,6 +85,7 @@ void prepareInfo
 (std::map<double, Concrete*>& concreteMap
 , std::map<double, Rebar*>& rebarMap
 , std::map<double, Steel*>& steelMap
+, std::map<std::string, E_SingleCaseType>& caseMap
 , std::vector<std::string>& factorFC
 , std::vector<std::string>& factorNC
 , std::vector<std::string>& factorQPC)
@@ -101,10 +113,27 @@ void prepareInfo
 		Steel* curSteel = new Steel(curName);
 		steelMap.insert(steelMap.end(), std::pair<double, Steel*>(curName, curSteel));
 	}
+	//初始化单工况类型表//[]此处待与YJK统一
+	//[]这里能直接使用ConcreteElement::caseMap.insert(...)来操作吗？
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("D", E_SingleCaseType::E_SCT_DEAD));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("L", E_SingleCaseType::E_SCT_LIVE));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("WX+", E_SingleCaseType::E_SCT_WIND));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("WX-", E_SingleCaseType::E_SCT_WIND));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("WY+", E_SingleCaseType::E_SCT_WIND));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("WY-", E_SingleCaseType::E_SCT_WIND));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("T", E_SingleCaseType::E_SCT_TEMPERATURE));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("PS", E_SingleCaseType::E_SCT_PRESTRESS));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("AD", E_SingleCaseType::E_SCT_AD));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("EX", E_SingleCaseType::E_SCT_E));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("EY", E_SingleCaseType::E_SCT_E));
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("EXY", E_SingleCaseType::E_SCT_E));//X为主的双向地震作用
+	caseMap.insert(caseMap.end(), std::pair<std::string, E_SingleCaseType>("EYX", E_SingleCaseType::E_SCT_E));//Y为主的双向地震作用
 	//初始化基本组合系数表
 	//注意保证单工况名称与这里的名称能对上，否则单工况内力取0
-	factorFC.insert(factorFC.end(), "1.35D+0.98L");
-	factorFC.insert(factorFC.end(), "1.2D+0.6L+1.3E");
+	factorFC.insert(factorFC.end(), " 1.35 D  +  0.64   WX+    +   0.98   L  ");
+	factorFC.insert(factorFC.end(), "1.35D-0.64WX-+0.98L");
+	factorFC.insert(factorFC.end(), "1.2D+0.6L+1.3EX");
+	factorFC.insert(factorFC.end(), "1.2D+0.6L-1.3EYX");
 	factorFC.insert(factorFC.end(), "1D+1AD");
 	//初始化标准组合系数表
 	factorNC.insert(factorNC.end(), "1D+1L");

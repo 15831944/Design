@@ -67,11 +67,11 @@ private:
 
 	void designULS();//承载能力极限状态设计
 	void designSLS();//正常使用极限状态设计
-	void designSection
-		(Section* section
-		, E_BeamSectionLocation sectionType
-		, const ForceData& forceData
-		, BeamSection::ResultFC& resultFC);//单一截面设计
+	void designSection//单一截面设计
+		(Section* section//要设计的截面
+		, E_BeamSectionLocation sectionType//截面位置类型
+		, const ForceData& forceData//设计内力
+		, BeamSection::ResultFC& resultFC);//存放截面设计结果
 	void setDesignParameterN(E_BeamSectionLocation sectionType);//设置非地震组合截面设计参数
 	void setDesignParameterAD(E_BeamSectionLocation sectionType);//设置人防组合截面设计参数
 	void setDesignParameterE(E_BeamSectionLocation sectionType);//设置地震组合截面设计参数
