@@ -2,9 +2,11 @@
 此文件存放砼构件配筋公式
 统一按 内力、几何尺寸、材料、计算参数、验算参数、结果 的顺序传入数据
 */
+#include <cmath>
+
 #include "concrete_design.h"
 #include "xxt.h"
-#include <cmath>
+
 
 const double AS_SINGLE = 22.5;//单筋保护层额外厚度as=c+AS_SINGLE按10箍筋25纵筋考虑
 const double AS_DUAL = 47.5;//双筋保护层额外厚度as=c+AS_DUAL按10箍筋25纵筋考虑

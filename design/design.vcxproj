@@ -90,23 +90,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="beam.cpp" />
+    <ClCompile Include="ConcreteElement.cpp" />
     <ClCompile Include="concrete_design.cpp" />
-    <ClCompile Include="design.cpp" />
-    <ClCompile Include="force_effect.cpp" />
+    <ClCompile Include="Design.cpp" />
+    <ClCompile Include="ForceEffect.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="material.cpp" />
-    <ClCompile Include="section.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Section.cpp" />
     <ClCompile Include="xxt.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\includes\sqlite3.h" />
-    <ClInclude Include="beam.h" />
+    <ClInclude Include="ConcreteElement.h" />
     <ClInclude Include="concrete_design.h" />
-    <ClInclude Include="design.h" />
-    <ClInclude Include="force_effect.h" />
-    <ClInclude Include="material.h" />
-    <ClInclude Include="section.h" />
+    <ClInclude Include="Design.h" />
+    <ClInclude Include="ForceEffect.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Section.h" />
     <ClInclude Include="xxt.h" />
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +115,7 @@
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
     <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

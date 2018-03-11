@@ -15,45 +15,33 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="beam.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="concrete_design.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="design.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="material.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="section.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="xxt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="force_effect.cpp">
+    <ClCompile Include="ConcreteElement.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ForceEffect.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Design.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Section.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="beam.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="concrete_design.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="design.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="section.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="xxt.h">
@@ -62,7 +50,19 @@
     <ClInclude Include="..\lib\includes\sqlite3.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="force_effect.h">
+    <ClInclude Include="ConcreteElement.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ForceEffect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Section.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Design.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -74,5 +74,6 @@
   <ItemGroup>
     <None Include="ClassDiagram.cd" />
     <None Include="ClassDiagram1.cd" />
+    <None Include="ClassDiagram2.cd" />
   </ItemGroup>
 </Project>
