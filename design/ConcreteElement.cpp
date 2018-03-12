@@ -195,32 +195,56 @@ ForceEffect::E_CombinationType ConcreteElement::getCombinationType
 
 //*------------------------------------*//
 
-Beam::Beam()
-{
+Beam::Beam(E_BeamType beamType, int sectionNumber)//[XXT]写默认值时，只在声明中写variable = defaultValue，实现中只写variable
+{//[XXT]构造函数给成员变量做“无意义”的初始化，给出“错误”的数值方便检查实例是否正常生成
 	this->c = 999;
 	this->Lc2 = 0;
 	this->Lc3 = 0;
+	setBeamType(beamType);
+	setSectionNumber(sectionNumber);
 	setMaterial(NULL, NULL, NULL, NULL);
 	setCalculateParameter(E_NFB::E_NFB_NULL, E_NFB::E_NFB_NULL);
 	setBeamType(E_BeamType::E_BT_BEAM);
-	this->sections.resize(SECTION_NUMBER);
+	this->sections.resize(this->sectionNumber);
 }
 
 Beam::~Beam(){}
+
+int Beam::getSectionNumber(){ return sectionNumber; }
 
 void Beam::setBeamType(E_BeamType beamType)
 {
 	this->beamType = beamType;
 }
 
-void Beam::setSection(const std::vector<Section*>& sections, double c, double Lc2, double Lc3)
+void Beam::setSectionNumber(int sectionNumber)
+{
+	this->sectionNumber = sectionNumber;
+}
+
+void Beam::setSection
+(const std::vector<Section*>& sections
+//, const std::vector<BeamSection::E_BeamSectionLocation>& sectionLocationTypes
+, double c
+, double Lc2
+, double Lc3)
 {
 	this->c = c;
 	this->Lc2 = Lc2;
 	this->Lc3 = Lc3;
-	for(int i = 0; i < sections.size(); i++)
+	int inputSectionNum = sections.size();//传入sections的个数
+	for(int i = 0; i < sectionNumber; i++)
 	{
-		this->sections[i].setSection(sections[i]);
+		if (i < inputSectionNum)
+		{
+			this->sections[i].setSection(sections[i]);
+			this->sections[i].setSectionLocationType(BeamSection::E_BeamSectionLocation::E_BSL_LR);
+			//this->sections[i].setSectionLocationType(sectionLocationTypes[i]);//[?]系统不认class BeamSection的前置声明？
+		}
+		else
+		{
+			this->sections[i].setSection(NULL);
+		}
 	}
 }
 
@@ -238,17 +262,18 @@ void Beam::setCalculateParameter(E_NFB Nfb, E_NFB Nfb_gz)
 	this->Nfb_gz = Nfb_gz;
 }
 
-void Beam::setCaseMap(const std::vector<std::map<std::string, ForceEffect::CaseForceData>>& caseMaps)
+void Beam::setCaseMap(const std::vector<std::map<std::string, Force>>& caseMaps)
 {
-	for (int i = 0; i < sections.size(); i++)
+	int caseMapsSize = caseMaps.size();
+	for (int i = 0; i < sectionNumber; i++)
 	{
-		this->sections[i].setCombineForceData(caseMaps[i], &this->m_FactorFC, &this->m_FactorNC, &this->m_FactorQPC);
+		if (i < caseMapsSize) this->sections[i].setCombineForceData(caseMaps[i], &this->m_FactorFC, &this->m_FactorNC, &this->m_FactorQPC);
 	}
 }
 
 void Beam::calcCombineForceData()
 {
-	for (int i = 0; i < sections.size(); i++)
+	for (int i = 0; i < sectionNumber; i++)
 	{
 		sections[i].calcCombineForceData();
 	}
@@ -258,7 +283,7 @@ void Beam::showResult()
 {
 	for (int i = 0; i < sections.size(); i++)
 	{
-		std::cout << "第" << i << "号截面设计结果：" << std::endl;
+		std::cout << std::string(10, '-') << "第" << i << "号截面设计结果：" << std::string(10, '-') << std::endl;
 		sections[i].showResult();
 	}
 }
@@ -267,8 +292,8 @@ void Beam::showResult()
 
 BeamSection::BeamSection()
 {
-	//setSection(NULL);
-	//setSectionLocationType(E_BeamSectionLocation::E_BSL_NULL);//[]能将枚举初始化成NULL吗？
+	setSection(NULL);
+	setSectionLocationType(E_BeamSectionLocation::E_BSL_UNKNOWN);
 }
 
 BeamSection::~BeamSection(){}
@@ -284,7 +309,7 @@ void BeamSection::setSectionLocationType(E_BeamSectionLocation sectionLocation)
 }
 
 void BeamSection::setCombineForceData
-(const std::map<std::string, ForceEffect::CaseForceData>& caseMap
+(const std::map<std::string, Force>& caseMap
 , std::vector<ForceEffect::CombineExp>* factorFC
 , std::vector<ForceEffect::CombineExp>* factorNC
 , std::vector<ForceEffect::CombineExp>* factorQPC
@@ -307,7 +332,7 @@ void BeamSection::showResult()
 	for (int i = 0; i < m_resultFC.size(); i++)
 	{
 		std::cout << "第" << i << "号组合结果:" << std::endl;
-		std::cout << "正截面" << std::endl;
+		std::cout << "正截面 M3=" << forceData.m_FundamentalCombination[i].force.M3 << std::endl;
 		std::cout << "x=" << m_resultFC[i].x << std::endl;
 		std::cout << "As=" << m_resultFC[i].As << "  ρ=" << m_resultFC[i].ρ << std::endl;
 		std::cout << "As'=" << m_resultFC[i].As_c << "  ρ'=" << m_resultFC[i].ρc << std::endl;

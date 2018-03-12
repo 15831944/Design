@@ -102,6 +102,9 @@ struct Force
 
 class ForceEffect
 {
+	friend class Design;
+	friend class DesignBeam;//[?]friend如何继承？
+	friend class BeamSection;
 public://通用数据
 	enum E_SingleCaseType
 	{//单工况类型
@@ -112,21 +115,6 @@ public://通用数据
 		E_SCT_PRESTRESS,//预应力
 		E_SCT_AD,//人防荷载
 		E_SCT_E//地震作用
-	};
-
-	struct CaseForceData
-	{//单工况内力数据
-		Force force;//内力
-		E_SingleCaseType caseType;//组合类型
-
-		CaseForceData(Force f, E_SingleCaseType cT)
-			:force(f), caseType(cT)
-		{}
-		void setData(Force f, E_SingleCaseType cT)
-		{
-			this->force = f;
-			this->caseType = cT;
-		}
 	};
 
 	enum E_CombinationType
@@ -164,7 +152,7 @@ public:
 	ForceEffect();
 	~ForceEffect();
 
-	void setCaseMap(const std::map<std::string, ForceEffect::CaseForceData>& caseMap);//设置单工况内力
+	void setCaseMap(const std::map<std::string, Force>& caseMap);//设置单工况内力
 	void setFC(std::vector<ForceEffect::CombineExp>* factorFC);//设置基本组合表
 	void setNC(std::vector<ForceEffect::CombineExp>* factorNC);//设置标准组合表
 	void setQPC(std::vector<ForceEffect::CombineExp>* factorQPC);//设置准永久组合表
@@ -174,13 +162,12 @@ public:
 	void calcFC();//计算基本组合
 	void calcNC();//计算标准组合
 	void calcQPC();//计算准永久组合
-//[]以下下内容有必要放到private里吗？
-	std::map<std::string, ForceEffect::CaseForceData> m_caseMap;//单工况内力
+
+private:
+	std::map<std::string, Force> m_caseMap;//单工况内力
 	std::vector<ForceEffect::CombineForceData> m_FundamentalCombination;//基本组合
 	std::vector<ForceEffect::CombineForceData> m_NominalCombination;//标准组合
 	std::vector<ForceEffect::CombineForceData> m_QuasiPermanentCombination;//准永久组合
-
-private:
 	std::vector<ForceEffect::CombineExp>* m_FactorFC;//基本组合系数表(解析后)
 	std::vector<ForceEffect::CombineExp>* m_FactorNC;//标准组合系数表(解析后)
 	std::vector<ForceEffect::CombineExp>* m_FactorQPC;//准永久组合系数表(解析后)
@@ -190,4 +177,5 @@ private://次要内部函数
 		(const std::vector<ForceEffect::CombineExp>* factorTable
 		, std::vector<ForceEffect::CombineForceData>& combinationTable);
 	Force calcCombineForce(const ForceEffect::CombineExp& curCombineExp);//根据组合系数表、caseMap生成对应的组合结果表
+
 };

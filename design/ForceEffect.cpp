@@ -12,7 +12,7 @@ ForceEffect::ForceEffect()
 
 ForceEffect::~ForceEffect(){}
 
-void ForceEffect::setCaseMap(const std::map<std::string, CaseForceData>& caseMap)
+void ForceEffect::setCaseMap(const std::map<std::string, Force>& caseMap)
 {
 	this->m_caseMap = caseMap;
 }
@@ -65,7 +65,7 @@ Force ForceEffect::calcCombineForce(const CombineExp& curCombineExp)
 	{
 		if (m_caseMap.count(factorPair.second) == 1)
 		{
-			Force curForce = m_caseMap.at(factorPair.second).force;
+			Force curForce = m_caseMap.at(factorPair.second);
 			result = result + curForce * factorPair.first;
 		}
 	}

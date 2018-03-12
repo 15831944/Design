@@ -47,7 +47,7 @@ void DesignBeam::prepare()
 
 void DesignBeam::designULS()
 {
-	for (int i = 0; i < beam->sections.size(); i++)//[]改成for each(BeamSection& curSection in beam->sections)行不行
+	for (int i = 0; i < beam->sectionNumber; i++)//[]改成for each(BeamSection& curSection in beam->sections)行不行
 	{//遍历梁的所有验算截面
 		int numFC = beam->m_FactorFC.size();//ConcreteElement的基本组合数
 		beam->sections[i].m_resultFC.resize(numFC);

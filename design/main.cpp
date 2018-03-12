@@ -17,7 +17,7 @@
 //[portotype]
 void test();
 ///准备数据
-void prepareInfo
+void prepareTables
 	(std::map<double, Concrete*>& concreteMap
 	, std::map<double, Rebar*>& rebarMap
 	, std::map<double, Steel*>& steelMap
@@ -25,8 +25,15 @@ void prepareInfo
 	, std::vector<std::string>& factorFC
 	, std::vector<std::string>& factorNC
 	, std::vector<std::string>& factorQPC);
+///设置砼设计基础信息
+void setBasicDesignInfo
+	(double γ0
+	, std::map<std::string, ForceEffect::E_SingleCaseType> caseMap
+	, std::vector<std::string> factorFC
+	, std::vector<std::string> factorNC
+	, std::vector<std::string> factorQPC);
 ///获取梁信息
-void getInfo
+void getBeamInfo
 	(Beam& beam
 	, std::map<double, Concrete*>& concreteMap
 	, std::map<double, Rebar*>& rebarMap
@@ -57,30 +64,32 @@ int main(){
 	std::vector<std::string> factorNC;//标准组合系数表
 	std::vector<std::string> factorQPC;//准永久组合系数表
 
-	prepareInfo(concreteMap, rebarMap, steelMap, caseMap, factorFC, factorNC, factorQPC);
-	ConcreteElement::setγ0(1.0);//[]待交给用户修改
-	ConcreteElement::setCaspMap(&caseMap);
-	ConcreteElement::setFactorFC_Str(&factorFC);
-	ConcreteElement::setFactorNC_Str(&factorNC);
-	ConcreteElement::setFactorQPC_Str(&factorQPC);
-	ConcreteElement::printAllFactorTables();
+	prepareTables(concreteMap, rebarMap, steelMap, caseMap, factorFC, factorNC, factorQPC);
+	std::cout << "安全系数=";
+	double γ0 = 1;
+	std::cin >> γ0;
+	setBasicDesignInfo(γ0, caseMap, factorFC, factorNC, factorQPC);
 	system("pause");
 
-	while(true){
-		Beam beam;
-		getInfo(beam, concreteMap, rebarMap, steelMap, sectionSet);
+	while(true)
+	{
+		Beam beam(Beam::E_BeamType::E_BT_FRAME_BEAM, 3);
+		getBeamInfo(beam, concreteMap, rebarMap, steelMap, sectionSet);
 		beam.calcCombineForceData();
 		DesignBeam designBeam;
 		designBeam.setData(&beam);
 		designBeam.design();
+
+		std::cout << std::string(50, '-') << std::endl;
 		beam.showResult();
 
 		system("pause");
+		
 	}
 	return 0;
 }
 
-void prepareInfo
+void prepareTables
 (std::map<double, Concrete*>& concreteMap
 , std::map<double, Rebar*>& rebarMap
 , std::map<double, Steel*>& steelMap
@@ -129,10 +138,8 @@ void prepareInfo
 	caseMap.insert(caseMap.end(), std::pair<std::string, ForceEffect::E_SingleCaseType>("EYX", ForceEffect::E_SingleCaseType::E_SCT_E));//Y为主的双向地震作用
 	//初始化基本组合系数表
 	//注意保证单工况名称与这里的名称能对上，否则单工况内力取0
-	factorFC.insert(factorFC.end(), " 1.35 D  +  0.64   WX+    +   0.98   L  ");
-	factorFC.insert(factorFC.end(), "1.35D-0.64WX-+0.98L");
+	factorFC.insert(factorFC.end(), "1.35D+0.98L");
 	factorFC.insert(factorFC.end(), "1.2D+0.6L+1.3EX");
-	factorFC.insert(factorFC.end(), "1.2D+0.6L-1.3EYX");
 	factorFC.insert(factorFC.end(), "1D+1AD");
 	//初始化标准组合系数表
 	factorNC.insert(factorNC.end(), "1D+1L");
@@ -140,7 +147,22 @@ void prepareInfo
 	factorQPC.insert(factorQPC.end(), "1D+0.6L");
 }
 
-void getInfo
+void setBasicDesignInfo
+(double γ0
+, std::map<std::string, ForceEffect::E_SingleCaseType> caseMap
+, std::vector<std::string> factorFC
+, std::vector<std::string> factorNC
+, std::vector<std::string> factorQPC)
+{
+	ConcreteElement::setγ0(γ0);
+	ConcreteElement::setCaspMap(&caseMap);
+	ConcreteElement::setFactorFC_Str(&factorFC);
+	ConcreteElement::setFactorNC_Str(&factorNC);
+	ConcreteElement::setFactorQPC_Str(&factorQPC);
+	ConcreteElement::printAllFactorTables();
+}
+
+void getBeamInfo
 (Beam& beam
 , std::map<double, Concrete*>& concreteMap
 , std::map<double, Rebar*>& rebarMap
@@ -151,11 +173,15 @@ void getInfo
 	beam.setBeamType((Beam::E_BeamType)0);
 	Section* section = new RectSection(300, 700);
 	std::vector<Section*> sections;
-	for (int i = 0; i < 9; i++)
+	std::vector<BeamSection::E_BeamSectionLocation> sectionLocationTypes;
+	for (int i = 0; i < beam.getSectionNumber(); i++)
 	{
 		sections.insert(sections.end(), section);
+		sectionLocationTypes.insert(sectionLocationTypes.end(), BeamSection::E_BeamSectionLocation::E_BSL_LR);
 	}
 	beam.setSection(sections, 20, 6000, 3000);
+	//beam.setSection(sections, sectionLocationTypes, 20, 6000, 3000);//[?]系统不认class BeamSection的前置声明？
+
 	Concrete* concretePt = getMapValueClassPt(concreteMap, 30.0);
 	Rebar* rebarLPt = getMapValueClassPt(rebarMap, 400.0);
 	Rebar* rebarSPt = getMapValueClassPt(rebarMap, 400.0);
@@ -163,57 +189,24 @@ void getInfo
 	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
 
 	//此阶段输入梁各截面单工况内力，Beam->BeamSection->ForceEffect中的m_caseMap将放一个完整的拷贝
-	std::vector<std::map<std::string, ForceEffect::CaseForceData>> caseMaps(9);
+	std::vector<std::map<std::string, Force>> caseMaps(beam.getSectionNumber());
 
-	for (int i = 0; i < 9; i++){
-		std::map<std::string, ForceEffect::CaseForceData> caseMap;
-		ForceEffect::CaseForceData curCaseForceData = ForceEffect::CaseForceData(Force(100, 200, 200, 200, 500, 600), ForceEffect::E_SingleCaseType::E_SCT_DEAD);;
-		caseMap.insert(caseMap.end(), std::pair<std::string, ForceEffect::CaseForceData>("D", curCaseForceData));
-		curCaseForceData.setData(Force(100, 200, 200, 200, 500, 600), ForceEffect::E_SingleCaseType::E_SCT_LIVE);
-		caseMap.insert(caseMap.end(), std::pair<std::string, ForceEffect::CaseForceData>("L", curCaseForceData));
-		curCaseForceData.setData(Force(100, 200, 200, 200, 500, 600), ForceEffect::E_SingleCaseType::E_SCT_AD);
-		caseMap.insert(caseMap.end(), std::pair<std::string, ForceEffect::CaseForceData>("AD", curCaseForceData));
-		curCaseForceData.setData(Force(100, 200, 200, 200, 500, 600), ForceEffect::E_SingleCaseType::E_SCT_E);
-		caseMap.insert(caseMap.end(), std::pair<std::string, ForceEffect::CaseForceData>("E", curCaseForceData));
+	for (int i = 0; i < beam.getSectionNumber(); i++){
+		std::map<std::string, Force> caseMap;
+		Force curCaseForce = Force(50, 100, 100, 100, 200, 300);
+		caseMap.insert(caseMap.end(), std::pair<std::string, Force>("D", curCaseForce));
+		curCaseForce = Force(10, 20, 20, 20, 50, 60);
+		caseMap.insert(caseMap.end(), std::pair<std::string, Force>("L", curCaseForce));
+		curCaseForce = Force(100, 200, 200, 200, 500, 600);
+		caseMap.insert(caseMap.end(), std::pair<std::string, Force>("AD", curCaseForce));
+		curCaseForce = Force(100, 200, 200, 200, 500, 600);
+		caseMap.insert(caseMap.end(), std::pair<std::string, Force>("EX", curCaseForce));
 		caseMaps[i] = caseMap;
 	}
 
 	beam.setCaseMap(caseMaps);
 	return;
 	/*-----以上为临时测试内容-----*/
-
-	/*
-	std::cout << "安全系数、抗震等级、抗震构造等级" << std::endl;
-	double γ0;
-	E_NFB Nfb, Nfb_gz;
-	std::cin >> γ0 >> Nfb >> Nfb_gz;
-	beam.setCalculateParameter(γ0, Nfb, Nfb_gz);
-
-	std::cout << "梁类型：0-框架梁；1-非框架梁；2-连梁；3-转换梁" << std::endl;
-	int beamType;
-	std::cin >> beamType;
-	beam.setBeamType((E_BeamType)beamType);//[]这里非得写个强转，否则编不过？
-
-	std::cout << "宽、高、保护层厚度" << std::endl;
-	double b, h, c, L2, L3;//宽、高、保护层厚度、梁局部坐标轴2、3方向的计算长度
-	std::cin >> b >> h >> c >> L2 >> L3;
-	Section* section = new RectSection(b, h);
-	beam.setSection(section, c, L2, L3);
-	
-	std::cout << "砼、纵筋、箍筋、钢骨材料等级" << std::endl;
-	double concreteName, rebarL, rebarS, skeleton;//砼、纵筋、箍筋、钢骨材料
-	std::cin >> concreteName >> rebarL >> rebarS >> skeleton;
-	Concrete* concretePt = getMapValueClassPt(concreteMap, concreteName);
-	Rebar* rebarLPt = getMapValueClassPt(rebarMap, rebarL);
-	Rebar* rebarSPt = getMapValueClassPt(rebarMap, rebarS);
-	Steel* steelPt = getMapValueClassPt(steelMap, skeleton);
-	beam.setMaterial(concretePt, rebarLPt, rebarSPt, steelPt);
-
-	std::cout << "N V2 V3 T M2 M3" << std::endl;
-	double n, v2, v3, t, m2, m3;
-	std::cin >> n >> v2 >> v3 >> t >> m2 >> m3;
-	beam.setForce(n, v2, v3, t, m2, m3);
-	*/
 }
 
 void test()
