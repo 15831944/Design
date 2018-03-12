@@ -6,13 +6,12 @@
 #include <map>
 #include <set>
 
-#include "sqlite3.h"
-
 #include "ConcreteElement.h"
 #include "Section.h"
 #include "Material.h"
 #include "Design.h"
 #include "ForceEffect.h"
+#include "DataBase.h"
 
 //[portotype]
 void test();
@@ -51,7 +50,7 @@ std::vector<ForceEffect::CombineExp> ConcreteElement::m_FactorNC;
 std::vector<ForceEffect::CombineExp> ConcreteElement::m_FactorQPC;
 
 int main(){
-//	test();
+	test();
 	//截面
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	//材料
@@ -211,8 +210,18 @@ void getBeamInfo
 
 void test()
 {
-  sqlite3* ptDataBase;//数据库指针
-  char* path = ".\\test.db";
-  int stage = sqlite3_open(path, &ptDataBase);
-  sqlite3_close(ptDataBase);
+	DataBase dataBase;
+	std::string path = ".\\test.db";
+	dataBase.setPath(path);
+	dataBase.open();
+	std::vector<std::string> columnNameAndTypes = { "Name TEXT" };// , "Age INTEGER", "Address TEXT"
+
+	std::vector<std::string> primaryKey = { "Name" };
+	dataBase.createTable("Count", columnNameAndTypes, primaryKey);
+	dataBase.addUser("Jerry", "30");
+	dataBase.modifyUser("Jerry", "25");
+	dataBase.deleteUser("Jerry");
+	dataBase.close();
+  
+  
 }
