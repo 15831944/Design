@@ -5,6 +5,8 @@
 
 #include "sqlite3.h"
 
+static const std::string NO_VALUE = "NULL";//标识数据为空//[]怎么写在类里？
+
 class DataBase
 {
 public://通用数据
@@ -16,6 +18,7 @@ public://通用数据
 		E_SQLVT_TEXT,//值是一个文本字符串，使用数据库编码（UTF-8、UTF-16BE 或 UTF-16LE）存储
 		E_SQLVT_BLOB//值是一个 blob 数据，完全根据它的输入存储，例如直接存储图像、音频等
 	};
+	
 
 public:
 	DataBase();
@@ -25,12 +28,20 @@ public:
 	std::string getPath();//获取路径
 	void open();//打开数据库
 	int close();//关闭数据库
-	bool createTable
+	bool createTable//创建表格
 		(const std::string& sTableName
-		, std::vector<std::string> columnNameAndTypes);//创建表格
-	bool addUser(const std::string& sName, const std::string& sAge);//添加行
-	bool deleteUser(const std::string& sName);//删除行
-	bool modifyUser(const std::string& sName, const std::string& sAge);//修改行
+		, std::vector<std::string> columnNameAndTypes//column内容
+		, std::vector<std::string> primaryKeys = std::vector<std::string>{NO_VALUE});//主键内容
+	bool deleteTable(const std::string& sTableName);//删除表格
+
+	bool addRow//添加行
+		(const std::string& sTableName
+		, const std::vector<std::string>& columnValues//添加行的各列数据
+		, const std::vector<std::string>& columnNames = std::vector<std::string>{NO_VALUE});//在columnNames处对位添加columnValues
+	bool deleteRow//删除满足特定条件的行[不写则删除所有行]
+		(const std::string& sTableName
+		, const std::string& sCondition = NO_VALUE);//条件[可选]
+	bool setRow(const std::string& sName, const std::string& sAge);//修改行
 
 private:
 	std::string path;//[]数据库文件路径，采用utf-8编码，如果路径中包含中文则需要进行编码转换

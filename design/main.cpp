@@ -214,13 +214,27 @@ void test()
 	std::string path = ".\\Data.db";
 	dataBase.setPath(path);
 	dataBase.open();
-	std::vector<std::string> columnNameAndTypes = { "Name TEXT" };// , "Age INTEGER", "Address TEXT"
+	std::string sTableName = "AddressList";
+//创建表格
+	std::vector<std::string> columnNameAndTypes = { "Name TEXT", "Age INTEGER", "Address TEXT" };
+	std::vector<std::string> primaryKey = { "Name TEXT" };
+	dataBase.createTable(sTableName, columnNameAndTypes, primaryKey);
+//添加数据
+	std::vector<std::string> columnValues = { "'Jerry'", "30", "'Beijing Chaoyang'" };
+	std::vector<std::string> columnNames = { "Name", "Age", "Address" };
+	dataBase.addRow(sTableName, columnValues, columnNames);
 
-	std::vector<std::string> primaryKey = { "Name" };
-	dataBase.createTable("Count", columnNameAndTypes);
-	dataBase.addUser("Jerry", "30");
-	dataBase.modifyUser("Jerry", "25");
-	dataBase.deleteUser("Jerry");
+	columnValues = { "'Tom'", "25" };
+	columnNames = { "Name", "Age" };
+	dataBase.addRow(sTableName, columnValues, columnNames);
+
+	columnValues = { "'Lucy'" };
+	columnNames = { "Name" };
+	dataBase.addRow(sTableName, columnValues, columnNames);
+//修改数据
+	dataBase.setRow("Jerry", "25");
+	dataBase.deleteRow(sTableName, "Age=25");
+	dataBase.deleteTable(sTableName);
 	dataBase.close();
   
   
