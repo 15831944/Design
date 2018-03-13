@@ -217,7 +217,7 @@ void test()
 	std::vector<std::string> columnNameAndTypes = { "Name TEXT" };// , "Age INTEGER", "Address TEXT"
 
 	std::vector<std::string> primaryKey = { "Name" };
-	dataBase.createTable("Count", columnNameAndTypes, primaryKey);
+	dataBase.createTable("Count", columnNameAndTypes);
 	dataBase.addUser("Jerry", "30");
 	dataBase.modifyUser("Jerry", "25");
 	dataBase.deleteUser("Jerry");

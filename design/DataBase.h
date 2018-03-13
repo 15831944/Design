@@ -27,8 +27,7 @@ public:
 	int close();//关闭数据库
 	bool createTable
 		(const std::string& sTableName
-		, std::vector<std::string> columnNameAndTypes
-		, std::vector<std::string> primaryKeys);//创建表格
+		, std::vector<std::string> columnNameAndTypes);//创建表格
 	bool addUser(const std::string& sName, const std::string& sAge);//添加行
 	bool deleteUser(const std::string& sName);//删除行
 	bool modifyUser(const std::string& sName, const std::string& sAge);//修改行

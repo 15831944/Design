@@ -38,8 +38,7 @@ int DataBase::close()
 
 bool DataBase::createTable
 (const std::string& sTableName
-, std::vector<std::string> columnNameAndTypes
-, std::vector<std::string> primaryKeys)
+, std::vector<std::string> columnNameAndTypes)
 {
 /*----------
 CREATE TABLE table_name(
@@ -58,12 +57,6 @@ PRIMARY KEY(one or more columns)
 	for each(std::string curColumnNameAndType in columnNameAndTypes)
 	{
 		strSql = strSql + curColumnNameAndType + ",";
-	}
-	//´´½¨Ö÷¼ü
-	strSql += "PRIMARY KEY ";
-	for each(std::string curPrimaryKey in primaryKeys)
-	{
-		strSql = strSql + curPrimaryKey + ",";
 	}
 	strSql = strSql.substr(0, strSql.size() - 1);
 	strSql += ");";
