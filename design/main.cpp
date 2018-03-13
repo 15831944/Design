@@ -211,7 +211,7 @@ void getBeamInfo
 void test()
 {
 	DataBase dataBase;
-	std::string path = ".\\test.db";
+	std::string path = ".\\Data.db";
 	dataBase.setPath(path);
 	dataBase.open();
 	std::vector<std::string> columnNameAndTypes = { "Name TEXT" };// , "Age INTEGER", "Address TEXT"
