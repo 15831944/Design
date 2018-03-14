@@ -224,16 +224,24 @@ void test()
 	std::vector<std::string> columnNames = { "Name", "Age", "Address" };
 	dataBase.addRow(sTableName, columnValues, columnNames);
 
-	columnValues = { "'Tom'", "25" };
-	columnNames = { "Name", "Age" };
-	dataBase.addRow(sTableName, columnValues, columnNames);
+	columnValues = { "'Tom'", "25", "'Shanghai China'" };
+	dataBase.addRow(sTableName, columnValues);
 
 	columnValues = { "'Lucy'" };
 	columnNames = { "Name" };
 	dataBase.addRow(sTableName, columnValues, columnNames);
-//修改数据
-	dataBase.setRow("Jerry", "25");
-	dataBase.deleteRow(sTableName, "Age=25");
+//修改列数据
+	std::string condition = "Age BETWEEN 15 AND 20";
+	std::map<std::string, std::string> columnNameValuePairs = { { "Name", "'Jerry'" }, { "Age", "16" } };
+	dataBase.setRow(sTableName, columnNameValuePairs, condition);
+//选择数据
+	columnNames = { "Name", "Age" };
+	condition = "Age < 20";
+	dataBase.selectColumn(sTableName, columnNames, condition);
+//删除行数据
+	condition = "Name = 'Jerry'";
+	dataBase.deleteRow(sTableName, condition);
+//删除表格
 	dataBase.deleteTable(sTableName);
 	dataBase.close();
   

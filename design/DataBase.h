@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include "sqlite3.h"
 
@@ -41,7 +42,14 @@ public:
 	bool deleteRow//删除满足特定条件的行[不写则删除所有行]
 		(const std::string& sTableName
 		, const std::string& sCondition = NO_VALUE);//条件[可选]
-	bool setRow(const std::string& sName, const std::string& sAge);//修改行
+	bool setRow//修改列数据，可以附加WHERE语句[不写则修改列的所有数据]
+		(const std::string& sTableName
+		, const std::map<std::string, std::string> columnNameValuePairs//要修改的列数据,columnName=columnValue
+		, const std::string& sCondition = NO_VALUE);//条件[可选]
+	bool selectColumn//选择列，可以附加WHERE语句[不写则选择出所有列]
+		(const std::string& sTableName
+		, const std::vector<std::string> columnNames = std::vector<std::string>{NO_VALUE}//要选择的列名称
+		, const std::string& sCondition = NO_VALUE);//条件[可选]
 
 private:
 	std::string path;//[]数据库文件路径，采用utf-8编码，如果路径中包含中文则需要进行编码转换
@@ -56,11 +64,11 @@ private:
 		, int(*callback)(void*, int, char**, char**)//回调函数//[?]这是什么用法？
 		, void *);//做为回调函数的第一个参数//[?]函数声明不用写变量名？
 
-	static int callback//[?]不知道干什么用的，好像是给sqlite3_exec的第3个参数用的
+/*	static int callback//[?]不知道干什么用的，好像是给sqlite3_exec的第3个参数用的
 		(void *NotUsed//由 sqlite3_exec() 的第四个参数传递而来
 		, int argc//表的列数
 		, char **argv//指向查询结果的指针数组, 可以由 sqlite3_column_text() 得到
 		, char **azColName);//指向表头名的指针数组, 可以由 sqlite3_column_name() 得到
-
+*/
 };
 
