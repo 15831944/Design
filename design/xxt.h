@@ -1,6 +1,8 @@
 #pragma once
 //存放各类通用声明、方法
 #include <map>
+#include <codecvt>
+#include <string>
 
 //[enum]
 ///力单位转换统一到N
@@ -44,3 +46,10 @@ ValueName* getMapValueClassPt(std::map<KeyName, ValueName*>& classMap, KeyName k
 	}
 	return classMap[key];
 }
+
+
+//编码转换UTF-8 to wstring
+std::wstring utf8_to_wstring(const std::string& str);
+
+//编码转换wstring to UTF-8
+std::string wstring_to_utf8(const std::wstring& str);

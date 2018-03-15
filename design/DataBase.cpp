@@ -1,15 +1,25 @@
 #include "DataBase.h"
 
 #include <iostream>
+#include <iomanip>
 #include <set>
+
+#include "xxt.h"
+
+//[portotype]
+int callback(void* para, int nCount, char** pValue, char** pName);//传给sqlite3_exec的回调函数
 
 DataBase::DataBase()
 {
-	stage = -1;
+	nRes = -1;
+	showLog = true;
 }
 
 
-DataBase::~DataBase(){}
+DataBase::~DataBase()
+{
+	delete selectResult;
+}
 
 void DataBase::setPath(std::string path)
 {
@@ -18,17 +28,29 @@ void DataBase::setPath(std::string path)
 
 std::string DataBase::getPath(){ return path; }
 
-void DataBase::open()
+void DataBase::setShowLog(bool showLog)
 {
-	stage = sqlite3_open(path.c_str(), &ptDB);
-	if (stage != SQLITE_OK)
+	this->showLog = showLog;
+}
+
+void DataBase::open(bool inMemory)
+{
+	if (inMemory)
+	{//内存数据库
+		nRes = sqlite3_open("", &ptDB);
+	}
+	else
+	{//文件数据库
+		nRes = sqlite3_open(path.c_str(), &ptDB);
+	}
+	if (nRes != SQLITE_OK)
 	{
-		std::cerr << path << "数据库打开失败，即将关闭数据库！" << std::endl;
+		if (showLog) std::cerr << path << "数据库打开失败，即将关闭数据库！" << std::endl;
 		close();
 	}
 	else
 	{
-		std::cerr << path << "数据库打开成功！" << std::endl;
+		if (showLog) std::cout << path << "数据库打开成功！" << std::endl;
 	}
 }
 
@@ -54,7 +76,7 @@ bool DataBase::createTable
 
 	std::set<std::string> visitedStr;//主键用过的Column
 	//创建表头
-	std::string strSql = "CREATE TABLE " + sTableName + " (";
+	strSql = "CREATE TABLE " + sTableName + " (";
 	//创建主键Column[可选]
 	if (primaryKeys[0] != NO_VALUE)
 	{
@@ -74,8 +96,8 @@ bool DataBase::createTable
 	strSql = strSql.substr(0, strSql.size() - 1);
 	strSql += ");";
 
-	std::string message = "创建表格" + sTableName;
-	return executeCommand(message, ptDB, strSql, 0, 0);
+	message = "创建表格" + sTableName;
+	return executeCommand(message, ptDB, strSql);
 }
 
 bool DataBase::deleteTable(const std::string& sTableName)
@@ -84,10 +106,10 @@ bool DataBase::deleteTable(const std::string& sTableName)
 	DROP TABLE database_name.table_name;
 	*/
 	//删除表格
-	std::string strSql = "DROP TABLE " + sTableName + ";";
+	strSql = "DROP TABLE " + sTableName + ";";
 
-	std::string message = "删除表格" + sTableName;
-	return executeCommand(message, ptDB, strSql, 0, 0);
+	message = "删除表格" + sTableName;
+	return executeCommand(message, ptDB, strSql);
 }
 
 bool DataBase::addRow
@@ -99,7 +121,7 @@ bool DataBase::addRow
 	INSERT INTO tableName [(column1, column2, column3,...columnN)] VALUES (value1, value2, value3,...valueN);//[(column1, column2, column3,...columnN)]选填
 	*/
 	//准备插入语句
-	std::string strSql = "INSERT INTO " + sTableName + " ";
+	strSql = "INSERT INTO " + sTableName + " ";
 	//创建column写入位置[可选]
 	if (columnNames[0] != NO_VALUE)
 	{
@@ -125,8 +147,8 @@ bool DataBase::addRow
 	strSql = strSql.substr(0, strSql.size() - 1);
 	strSql += ");";
 
-	std::string message = "在" + sTableName + "中添加数据" + content;
-	return executeCommand(message, ptDB, strSql, 0, 0);
+	message = "在" + sTableName + "中添加数据" + content;
+	return executeCommand(message, ptDB, strSql);
 }
 
 bool DataBase::deleteRow(const std::string& sTableName, const std::string& sCondition)
@@ -136,9 +158,8 @@ bool DataBase::deleteRow(const std::string& sTableName, const std::string& sCond
 	WHERE [condition];
 	*/
 	//准备删除语句
-	std::string strSql = "DELETE FROM " + sTableName;
+	strSql = "DELETE FROM " + sTableName;
 	//条件[可选]
-	std::string message;
 	if (sCondition != NO_VALUE)
 	{
 		strSql = strSql + " WHERE " + sCondition + ";";
@@ -149,7 +170,7 @@ bool DataBase::deleteRow(const std::string& sTableName, const std::string& sCond
 		strSql += "';";
 		message = "从" + sTableName + "中删除所有数据";
 	}
-	return executeCommand(message, ptDB, strSql, 0, 0);
+	return executeCommand(message, ptDB, strSql);
 }
 
 bool DataBase::setRow
@@ -164,7 +185,7 @@ bool DataBase::setRow
 	*/
 	std::string columnUpdateContent;//具体修改内容
 	//准备修改语句
-	std::string strSql = "UPDATE " + sTableName + " SET ";
+	strSql = "UPDATE " + sTableName + " SET ";
 	//写入各列修改内容
 	for each(auto curColumnNameValuePair in columnNameValuePairs)
 	{
@@ -174,7 +195,6 @@ bool DataBase::setRow
 	strSql = strSql.substr(0, strSql.size() - 2);
 	columnUpdateContent = columnUpdateContent.substr(0, columnUpdateContent.size() - 2);
 	//条件[可选]
-	std::string message;
 	if (sCondition != NO_VALUE)
 	{
 		strSql = strSql + " WHERE " + sCondition + ";";
@@ -185,25 +205,7 @@ bool DataBase::setRow
 		strSql += "';";
 		message = "从" + sTableName + "中修改以下所有列数据:\n" + std::string(5, ' ') + columnUpdateContent;
 	}
-	return executeCommand(message, ptDB, strSql, 0, 0);
-}
-
-//[?]回传函数怎么用？
-int callback(void*para, int nCount, char** pValue, char** pName) {
-	/*****************************************************************************
-	sqlite 每查到一条记录，就调用一次这个回调
-	para是你在 sqlite3_exec 里传入的 void * 参数, 通过para参数，你可以传入一些特殊的指针（比如类指  针、结构指针），然后在这里面强制转换成对应的类型（这里面是void*类型，必须强制转换成你的类型才可用）。然后操作这些数据
-	nCount是这一条(行)记录有多少个字段 (即这条记录有多少列)
-	char ** pValue 是个关键值，查出来的数据都保存在这里，它实际上是个1维数组（不要以为是2维数组），每一个元素都是一个 char* 值，是一个字段内容（用字符串来表示，以/0结尾）
-	char ** pName 跟pValue是对应的，表示这个字段的字段名称, 也是个1维数组
-	*****************************************************************************/
-	std::string result;
-	for (int i = 0; i < nCount; i++)
-	{
-		result = result + pName[i] + " = " + pValue[i] + "\n";
-	}
-	std::cout << result << std::endl;
-	return 0;
+	return executeCommand(message, ptDB, strSql);
 }
 
 bool DataBase::selectColumn
@@ -217,7 +219,7 @@ bool DataBase::selectColumn
 	*/
 	std::string columnSelectContent;//具体修改内容
 	//准备选择语句
-	std::string strSql = "SELECT ";
+	strSql = "SELECT ";
 	//写入选择列名称[可选]
 	if (columnNames[0] != NO_VALUE)
 	{
@@ -235,7 +237,6 @@ bool DataBase::selectColumn
 	}
 	strSql += " FROM " + sTableName;
 	//条件[可选]
-	std::string message;
 	if (sCondition != NO_VALUE)
 	{
 		strSql = strSql + " WHERE " + sCondition + ";";
@@ -246,26 +247,88 @@ bool DataBase::selectColumn
 		strSql += "';";
 		message = "从" + sTableName + "中选择下列所有列数据:\n" + std::string(5, ' ') + columnSelectContent;
 	}
-	return executeCommand(message, ptDB, strSql, callback, 0);//[?]回传函数怎么用？
+	selectResult->clear();
+	bool result = executeCommand(message, ptDB, strSql, callback, selectResult);//[?]回传函数怎么用？
+	return result;
 }
 
 bool DataBase::executeCommand
 (std::string commandName
 , sqlite3* ptDB
 , std::string sqlCommand
-, int(*callback)(void*, int, char**, char**)
-, void *)
+, int(*callback)(void* selectResult, int, char**, char**)
+, void* call_Back_1th_parameter)
 {
-	char* cErrMsg;//错误信息
-	int nRes = sqlite3_exec(ptDB, sqlCommand.c_str(), callback, 0, &cErrMsg);//执行状态
+	nRes = sqlite3_exec(ptDB, sqlCommand.c_str(), callback, call_Back_1th_parameter, &cErrMsg);//执行状态
 	if (nRes != SQLITE_OK)
 	{
-		std::cout << "[×] " << commandName << "失败：" << cErrMsg << std::endl;
+		if (showLog) std::cout << "[×] " << commandName << "失败：" << cErrMsg << std::endl << std::endl;
 		return false;
 	}
 	else
 	{
-		std::cout << "[√] " << commandName << "成功：" << std::endl;
+		if (showLog) std::cout << "[√] " << commandName << "成功：" << std::endl << std::endl;
 		return true;
 	}
+}
+
+void DataBase::prinSelectResult()
+{
+	std::cout << "一共查询出" << selectResult->count << "条记录:" << std::endl;
+	//输出表头
+	std::cout << std::setw(COLUMN_WIDTH_INDEX) << "序号";
+	for each(auto curColumnName in selectResult->columnNames)
+	{
+		std::cout << std::setw(COLUMN_WIDTH) << curColumnName << "|";
+	}
+	std::cout << std::endl;
+	//输出内容
+	for (int i = 0; i < selectResult->count; i++)
+	{
+		std::cout << std::setw(COLUMN_WIDTH_INDEX) << i + 1;
+		for each(auto curColumnValue in selectResult->columnValues[i])
+		{
+			std::cout << std::setw(COLUMN_WIDTH) << curColumnValue << "|";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+int callback(void* para, int nCount, char** pValue, char** pName) {
+	/*****************************************************************************
+	sqlite3 每查到一条记录，就调用一次这个回调！
+	para是你在 sqlite3_exec 里传入的 void * 参数, 通过para参数，你可以传入一些特殊的指针（比如类指  针、结构指针），然后这里强制转换成对应的类型（这里面是void*类型，必须强制转换成你的类型才可用），进行数据写入
+	nCount是这一条(行)记录有多少个字段 (即这条记录有多少列)
+	char ** pValue 是个关键值，查出来的数据都保存在这里，它实际上是个1维数组（不要以为是2维数组），每一个元素都是一个 char* 值，是一个字段内容（用字符串来表示，以/0结尾）
+	char ** pName 跟pValue是对应的，表示这个字段的字段名称, 也是个1维数组
+	*****************************************************************************/
+
+	DataBase::SelectResult* curResult = (DataBase::SelectResult*) para;
+	//写入表头
+	if (curResult->columnNames.size() == 0)
+	{//表头只用写入一次
+		for (int i = 0; i < nCount; i++)
+		{
+			curResult->columnNames.insert(curResult->columnNames.end(), pName[i]);
+		}
+	}
+	//写入数据
+	std::vector<std::string> curColumnValues;
+	for (int i = 0; i < nCount; i++)
+	{
+		curColumnValues.insert(curColumnValues.end(), pValue[i]);
+	}
+	curResult->columnValues.insert(curResult->columnValues.end(), curColumnValues);
+	curResult->count++;//每查到一条结果就运行一次，因此每次进来都表明查出的结果数量要++
+	/*
+	//输出每次查询出的结果
+	std::string result;
+	for (int i = 0; i < nCount; i++)
+	{
+	result = result + pName[i] + " = " + pValue[i] + " | ";
+	}
+	std::cout << result << std::endl;
+	*/
+	return 0;
 }

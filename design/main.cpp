@@ -14,7 +14,8 @@
 #include "DataBase.h"
 
 //[portotype]
-void test();
+///学习数据库
+void test(bool inMemory);
 ///准备数据
 void prepareTables
 	(std::map<double, Concrete*>& concreteMap
@@ -50,7 +51,19 @@ std::vector<ForceEffect::CombineExp> ConcreteElement::m_FactorNC;
 std::vector<ForceEffect::CombineExp> ConcreteElement::m_FactorQPC;
 
 int main(){
-	test();
+	std::cout << "对文件数据库进行10次操作" << std::endl;
+	system("pause");
+	for (int i = 0; i < 10; i++)
+	{
+		test(false);
+	}
+	std::cout << "对内存数据库进行1000次操作" << std::endl;
+	system("pause");
+	for (int i = 0; i < 1000; i++)
+	{
+		test(true);
+	}
+	system("pause");
 	//截面
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	//材料
@@ -208,12 +221,13 @@ void getBeamInfo
 	/*-----以上为临时测试内容-----*/
 }
 
-void test()
+void test(bool inMemory)
 {
 	DataBase dataBase;
 	std::string path = ".\\Data.db";
 	dataBase.setPath(path);
-	dataBase.open();
+	dataBase.setShowLog(false);
+	dataBase.open(inMemory);
 	std::string sTableName = "AddressList";
 //创建表格
 	std::vector<std::string> columnNameAndTypes = { "Name TEXT", "Age INTEGER", "Address TEXT" };
@@ -231,19 +245,18 @@ void test()
 	columnNames = { "Name" };
 	dataBase.addRow(sTableName, columnValues, columnNames);
 //修改列数据
-	std::string condition = "Age BETWEEN 15 AND 20";
+	std::string condition = "Age BETWEEN 27 AND 30";
 	std::map<std::string, std::string> columnNameValuePairs = { { "Name", "'Jerry'" }, { "Age", "16" } };
 	dataBase.setRow(sTableName, columnNameValuePairs, condition);
 //选择数据
 	columnNames = { "Name", "Age" };
-	condition = "Age < 20";
+	condition = "Age > 0";
 	dataBase.selectColumn(sTableName, columnNames, condition);
+	dataBase.prinSelectResult();
 //删除行数据
 	condition = "Name = 'Jerry'";
 	dataBase.deleteRow(sTableName, condition);
 //删除表格
 	dataBase.deleteTable(sTableName);
-	dataBase.close();
-  
-  
+	dataBase.close(); 
 }
