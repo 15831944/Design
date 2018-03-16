@@ -38,7 +38,7 @@ public://通用数据
 	};
 
 	static const int COLUMN_WIDTH_INDEX = 3;//输出的列序号宽度
-	static const int COLUMN_WIDTH = 10;//输出的列宽
+	static const int COLUMN_WIDTH = 15;//输出的列宽
 public:
 	DataBase();
 	~DataBase();
@@ -47,6 +47,7 @@ public:
 	std::string getPath();//获取路径
 	void setShowLog(bool showLog);//设置是否输出日志,默认开启
 	void open(bool inMemory = false);//打开数据库,默认从文件打开,T-内存数据库,F-文件数据库
+	void copyTo(DataBase& targetDB);//将当前DataBase的内容拷贝到targetDB中
 	int close();//关闭数据库
 	bool createTable//创建表格
 		(const std::string& sTableName
