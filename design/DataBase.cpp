@@ -244,7 +244,7 @@ bool DataBase::selectColumn
 	}
 	else
 	{
-		strSql += "';";
+		strSql += ";";
 		message = "从" + sTableName + "中选择下列所有列数据:\n" + std::string(5, ' ') + columnSelectContent;
 	}
 	selectResult->clear();
@@ -272,7 +272,7 @@ bool DataBase::executeCommand
 	}
 }
 
-void DataBase::prinSelectResult()
+void DataBase::printSelectResult()
 {
 	std::cout << "一共查询出" << selectResult->count << "条记录:" << std::endl;
 	//输出表头
@@ -293,6 +293,12 @@ void DataBase::prinSelectResult()
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
+}
+
+void DataBase::printTable(std::string sTableName)
+{
+	selectColumn(sTableName);
+	printSelectResult();
 }
 
 int callback(void* para, int nCount, char** pValue, char** pName) {

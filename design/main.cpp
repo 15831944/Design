@@ -233,6 +233,7 @@ void test(bool inMemory)
 	std::vector<std::string> columnNameAndTypes = { "Name TEXT", "Age INTEGER", "Address TEXT" };
 	std::vector<std::string> primaryKey = { "Name TEXT" };
 	dataBase.createTable(sTableName, columnNameAndTypes, primaryKey);
+	dataBase.printTable(sTableName);
 //添加数据
 	std::vector<std::string> columnValues = { "'Jerry'", "30", "'Beijing Chaoyang'" };
 	std::vector<std::string> columnNames = { "Name", "Age", "Address" };
@@ -244,15 +245,19 @@ void test(bool inMemory)
 	columnValues = { "'Lucy'" };
 	columnNames = { "Name" };
 	dataBase.addRow(sTableName, columnValues, columnNames);
+
+	dataBase.printTable(sTableName);
 //修改列数据
 	std::string condition = "Age BETWEEN 27 AND 30";
 	std::map<std::string, std::string> columnNameValuePairs = { { "Name", "'Jerry'" }, { "Age", "16" } };
 	dataBase.setRow(sTableName, columnNameValuePairs, condition);
+
+	dataBase.printTable(sTableName);
 //选择数据
 	columnNames = { "Name", "Age" };
 	condition = "Age > 0";
 	dataBase.selectColumn(sTableName, columnNames, condition);
-	dataBase.prinSelectResult();
+	dataBase.printSelectResult();
 //删除行数据
 	condition = "Name = 'Jerry'";
 	dataBase.deleteRow(sTableName, condition);

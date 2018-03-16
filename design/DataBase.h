@@ -69,7 +69,8 @@ public:
 		(const std::string& sTableName
 		, const std::vector<std::string> columnNames = std::vector<std::string>{NO_VALUE}//要选择的列名称
 		, const std::string& sCondition = NO_VALUE);//条件[可选]
-	void prinSelectResult();//输出选择结果
+	void printSelectResult();//输出选择结果
+	void printTable(std::string sTableName);//输出表格
 
 private:
 	std::string path;//[]数据库文件路径,采用utf-8编码,如果路径中包含中文则需要进行编码转换,path=""时为内存数据库
