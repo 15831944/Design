@@ -15,7 +15,7 @@
 
 //[portotype]
 ///学习数据库
-void test(bool inMemory);
+void test();
 ///准备数据
 void prepareTables
 	(std::map<double, Concrete*>& concreteMap
@@ -51,19 +51,7 @@ std::vector<ForceEffect::CombineExp> ConcreteElement::m_FactorNC;
 std::vector<ForceEffect::CombineExp> ConcreteElement::m_FactorQPC;
 
 int main(){
-	std::cout << "对文件数据库进行10次操作" << std::endl;
-	system("pause");
-	for (int i = 0; i < 10; i++)
-	{
-		test(false);
-	}
-	std::cout << "对内存数据库进行1000次操作" << std::endl;
-	system("pause");
-	for (int i = 0; i < 1000; i++)
-	{
-    test(true);
-	}
-	system("pause");
+//	test();
 	//截面
 	std::set<Section*> sectionSet;//截面表//[]以后还是得用map对位编号
 	//材料
@@ -221,47 +209,75 @@ void getBeamInfo
 	/*-----以上为临时测试内容-----*/
 }
 
-void test(bool inMemory)
+void test()
 {
-	DataBase dataBase;
-	std::string path = ".\\Data.db";
-	dataBase.setPath(path);
-	dataBase.setShowLog(false);
-	dataBase.open(false);
+	DataBase memoryDataBase;
+	memoryDataBase.open(true);
+	memoryDataBase.setShowLog(false);
+
 	std::string sTableName = "AddressList";
 //创建表格
+	memoryDataBase.deleteTable(sTableName);
 	std::vector<std::string> columnNameAndTypes = { "Name TEXT", "Age INTEGER", "Address TEXT" };
-	std::vector<std::string> primaryKey = { "Name TEXT" };
-	dataBase.createTable(sTableName, columnNameAndTypes, primaryKey);
-//	dataBase.printTable(sTableName);
+	memoryDataBase.createTable(sTableName, columnNameAndTypes);
+	//std::vector<std::string> primaryKey = { "Name TEXT" };
+	//memoryDataBase.createTable(sTableName, columnNameAndTypes, primaryKey);//主键不能重复
 //添加数据
+	int num = 1000000;
+	int persentNum = 100;//百分比份数
+	std::cout << "准备写入" << num * 2 << "条数据" << std::endl;
 	std::vector<std::string> columnValues = { "'Jerry'", "30", "'Beijing Chaoyang'" };
 	std::vector<std::string> columnNames = { "Name", "Age", "Address" };
-	dataBase.addRow(sTableName, columnValues, columnNames);
+	memoryDataBase.addRow(sTableName, columnValues, columnNames);
+	for (int i = 0; i < num; i++)
+	{
+		columnValues = { "'Tom'", "25", "'Shanghai China'" };
+		memoryDataBase.addRow(sTableName, columnValues);
 
-	columnValues = { "'Tom'", "25", "'Shanghai China'" };
-	dataBase.addRow(sTableName, columnValues);
-
-	columnValues = { "'Lucy'" };
-	columnNames = { "Name" };
-	dataBase.addRow(sTableName, columnValues, columnNames);
-
-//	dataBase.printTable(sTableName);
+		columnValues = { "'Lucy'" };
+		columnNames = { "Name" };
+		memoryDataBase.addRow(sTableName, columnValues, columnNames);
+		if (i % (num / persentNum) == 0) std::cout << i / (num / persentNum) * 100 / persentNum << "%   ";
+	}
+	std::cout << num * 2 << "条数据写入成功" << std::endl;
+//	memoryDataBase.printTable(sTableName);
 //修改列数据
 	std::string condition = "Age BETWEEN 27 AND 30";
 	std::map<std::string, std::string> columnNameValuePairs = { { "Name", "'Jerry'" }, { "Age", "16" } };
-	dataBase.setRow(sTableName, columnNameValuePairs, condition);
+	memoryDataBase.setRow(sTableName, columnNameValuePairs, condition);
 
-//	dataBase.printTable(sTableName);
+//	memoryDataBase.printTable(sTableName);
 //选择数据
 	columnNames = { "Name", "Age" };
-	condition = "Age > 0";
-	dataBase.selectColumn(sTableName, columnNames, condition);
-//	dataBase.printSelectResult();
+	condition = "Age BETWEEN 15 AND 25";
+	memoryDataBase.selectColumn(sTableName, columnNames, condition);
+//	memoryDataBase.printSelectResult();
+
+//将in-memory数据库拷贝到文件数据库中
+	std::cout << "开始将内存数据库写入到文件数据库" << std::endl;
+	DataBase dataBase;
+	std::string path = ".\\DataTest.db";
+	dataBase.setPath(path);
+	dataBase.setShowLog(false);
+	dataBase.open(false);
+	memoryDataBase.copyTo(dataBase);
+	dataBase.close();
+	std::cout << "写入成功" << std::endl;
+
+	std::cout << "开始将文件数据库写入到内存数据库" << std::endl;
+	DataBase inMemoryDataBase;
+	dataBase.open();
+	inMemoryDataBase.open(true);
+	dataBase.copyTo(inMemoryDataBase);
+	std::cout << "写入成功" << std::endl;
+
+
+/*
 //删除行数据
 	condition = "Name = 'Jerry'";
-	dataBase.deleteRow(sTableName, condition);
+	memoryDataBase.deleteRow(sTableName, condition);
+*/
 //删除表格
-	dataBase.deleteTable(sTableName);
-	dataBase.close(); 
+	memoryDataBase.deleteTable(sTableName);
+	memoryDataBase.close(); 
 }

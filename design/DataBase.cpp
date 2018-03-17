@@ -33,19 +33,13 @@ void DataBase::setShowLog(bool showLog)
 	this->showLog = showLog;
 }
 
-void DataBase::open(bool inMemory)
+void DataBase::open(bool inMemory)//[]可能写个openInMemory,将文件数据库拷贝到内存中进行操作
 {
-	if (inMemory)
-	{//内存数据库
-		nRes = sqlite3_open("", &ptDB);
-	}
-	else
-	{//文件数据库
-		nRes = sqlite3_open(path.c_str(), &ptDB);
-	}
+	if (inMemory) path = ":memory:";//[]内存数据库使用":memory:"作为文件名
+	nRes = sqlite3_open(path.c_str(), &ptDB);
 	if (nRes != SQLITE_OK)
 	{
-		if (showLog) std::cerr << path << "数据库打开失败，即将关闭数据库！" << std::endl;
+		if (showLog) std::cerr << path << "数据库打开失败" << sqlite3_errmsg(ptDB) << "即将关闭数据库！" << std::endl;
 		close();
 	}
 	else
@@ -53,6 +47,33 @@ void DataBase::open(bool inMemory)
 		if (showLog) std::cout << path << "数据库打开成功！" << std::endl;
 	}
 }
+
+void DataBase::copyTo(DataBase& targetDB)
+{
+	if (this->ptDB == targetDB.ptDB)
+	{
+		std::cerr << "输入、输出数据库不能相同！" << std::endl;
+		return;
+	}
+//	if (this->ptDB == NULL) std::cerr << "输入数据库未打开！" << std::endl;
+//	if (targetDB.ptDB == NULL) std::cerr << "输出数据库未打开！" << std::endl;
+	sqlite3_backup* ptDB_Backup = sqlite3_backup_init(targetDB.ptDB, "main", this->ptDB, "main");//用于进行备份
+	if (ptDB_Backup){
+		(void)sqlite3_backup_step(ptDB_Backup, -1);
+		(void)sqlite3_backup_finish(ptDB_Backup);
+	}
+	int nRes = sqlite3_errcode(targetDB.ptDB);
+	std::string commandName = "将数据库" + this->path + "拷贝到数据库" + targetDB.path + "中";
+	if (nRes != SQLITE_OK)
+	{
+		if (showLog) std::cout << "[×] " << commandName << "失败：" << std::endl;
+	}
+	else
+	{
+		if (showLog) std::cout << "[√] " << commandName << "成功：" << std::endl;
+	}
+}
+
 
 int DataBase::close()
 {
@@ -248,7 +269,7 @@ bool DataBase::selectColumn
 		message = "从" + sTableName + "中选择下列所有列数据:\n" + std::string(5, ' ') + columnSelectContent;
 	}
 	selectResult->clear();
-	bool result = executeCommand(message, ptDB, strSql, callback, selectResult);//[?]回传函数怎么用？
+	bool result = executeCommand(message, ptDB, strSql, callback, selectResult);
 	return result;
 }
 
@@ -267,7 +288,7 @@ bool DataBase::executeCommand
 	}
 	else
 	{
-		if (showLog) std::cout << "[√] " << commandName << "成功：" << std::endl << std::endl;
+		if (showLog) std::cout << "[√] " << commandName << "成功：" << std::endl;
 		return true;
 	}
 }
@@ -323,7 +344,8 @@ int callback(void* para, int nCount, char** pValue, char** pName) {
 	std::vector<std::string> curColumnValues;
 	for (int i = 0; i < nCount; i++)
 	{
-		curColumnValues.insert(curColumnValues.end(), pValue[i]);
+		std::string curColumnValue = pValue[i] == NULL ? "" : pValue[i];//对录入信息不完整的情况进行过滤
+		curColumnValues.insert(curColumnValues.end(), curColumnValue);
 	}
 	curResult->columnValues.insert(curResult->columnValues.end(), curColumnValues);
 	curResult->count++;//每查到一条结果就运行一次，因此每次进来都表明查出的结果数量要++
