@@ -61,7 +61,7 @@ int main(){
 	system("pause");
 	for (int i = 0; i < 1000; i++)
 	{
-		test(true);
+    test(true);
 	}
 	system("pause");
 	//截面
@@ -227,13 +227,13 @@ void test(bool inMemory)
 	std::string path = ".\\Data.db";
 	dataBase.setPath(path);
 	dataBase.setShowLog(false);
-	dataBase.open(inMemory);
+	dataBase.open(false);
 	std::string sTableName = "AddressList";
 //创建表格
 	std::vector<std::string> columnNameAndTypes = { "Name TEXT", "Age INTEGER", "Address TEXT" };
 	std::vector<std::string> primaryKey = { "Name TEXT" };
 	dataBase.createTable(sTableName, columnNameAndTypes, primaryKey);
-	dataBase.printTable(sTableName);
+//	dataBase.printTable(sTableName);
 //添加数据
 	std::vector<std::string> columnValues = { "'Jerry'", "30", "'Beijing Chaoyang'" };
 	std::vector<std::string> columnNames = { "Name", "Age", "Address" };
@@ -246,18 +246,18 @@ void test(bool inMemory)
 	columnNames = { "Name" };
 	dataBase.addRow(sTableName, columnValues, columnNames);
 
-	dataBase.printTable(sTableName);
+//	dataBase.printTable(sTableName);
 //修改列数据
 	std::string condition = "Age BETWEEN 27 AND 30";
 	std::map<std::string, std::string> columnNameValuePairs = { { "Name", "'Jerry'" }, { "Age", "16" } };
 	dataBase.setRow(sTableName, columnNameValuePairs, condition);
 
-	dataBase.printTable(sTableName);
+//	dataBase.printTable(sTableName);
 //选择数据
 	columnNames = { "Name", "Age" };
 	condition = "Age > 0";
 	dataBase.selectColumn(sTableName, columnNames, condition);
-	dataBase.printSelectResult();
+//	dataBase.printSelectResult();
 //删除行数据
 	condition = "Name = 'Jerry'";
 	dataBase.deleteRow(sTableName, condition);
